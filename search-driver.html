@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Ride Tracking | SitamarhiCab</title>
+
+
+    <!-- EXISTING SITE CSS -->
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+
+    <!-- FONT AWESOME -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+    >
+
+
+    <!-- LEAFLET CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            margin: 0;
+        }
+
+
+        .tracking-page {
+
+            min-height: 100vh;
+
+            padding: 25px 15px;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: flex-start;
+
+        }
+
+
+        .tracking-card {
+
+            width: min(950px, 100%);
+
+            background: #ffffff;
+
+            border-radius: 22px;
+
+            padding: 25px;
+
+            box-shadow:
+                0 12px 40px
+                rgba(0, 0, 0, 0.12);
+
+        }
+
+
+        .tracking-title {
+
+            text-align: center;
+
+            margin:
+                0 0 8px;
+
+            color: #222;
+
+        }
+
+
+        .tracking-title.main {
+
+            font-size: 34px;
+
+        }
+
+
+        .tracking-title.sub {
+
+            font-size: 25px;
+
+        }
+
+
+        #statusText {
+
+            text-align: center;
+
+            font-weight: 600;
+
+            font-size: 17px;
+
+            margin: 18px 0;
+
+            min-height: 24px;
+
+        }
+
+
+        /* ==================================
+           LOADER
+        ================================== */
+
+        .loader {
+
+            width: 55px;
+
+            height: 55px;
+
+            border-radius: 50%;
+
+            border: 7px solid #ddd;
+
+            border-top-color: #ffd000;
+
+            animation:
+                spin 0.9s linear infinite;
+
+            margin: 20px auto;
+
+            display: none;
+
+        }
+
+
+        @keyframes spin {
+
+            to {
+                transform:
+                    rotate(360deg);
+            }
+
+        }
+
+
+        /* ==================================
+           DRIVER CARD
+        ================================== */
+
+        .driver-card {
+
+            display: none;
+
+            margin-top: 20px;
+
+            padding: 22px;
+
+            border-radius: 18px;
+
+            background: #f7f8fa;
+
+            text-align: center;
+
+            border: 1px solid #eee;
+
+        }
+
+
+        .driver-photo {
+
+            width: 110px;
+
+            height: 110px;
+
+            object-fit: cover;
+
+            border-radius: 50%;
+
+            border: 5px solid #ffd000;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        .driver-card h2 {
+
+            margin:
+                8px 0;
+
+            color: #222;
+
+        }
+
+
+        .driver-card p {
+
+            margin:
+                7px 0;
+
+            color: #444;
+
+        }
+
+
+        /* ==================================
+           INFO
+        ================================== */
+
+        .ride-info {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap: 14px;
+
+            margin-top: 20px;
+
+        }
+
+
+        .info-box {
+
+            background: #f5f5f5;
+
+            border-radius: 14px;
+
+            padding: 16px;
+
+            text-align: center;
+
+        }
+
+
+        .info-box span {
+
+            display: block;
+
+            font-size: 13px;
+
+            color: #777;
+
+            margin-bottom: 6px;
+
+        }
+
+
+        .info-box strong {
+
+            font-size: 18px;
+
+            color: #222;
+
+        }
+
+
+        /* ==================================
+           RIDE DETAILS
+        ================================== */
+
+        .ride-details {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+
+            gap: 12px;
+
+            margin-top: 15px;
+
+        }
+
+
+        .detail-box {
+
+            padding: 14px;
+
+            background: #fafafa;
+
+            border-radius: 12px;
+
+            border: 1px solid #eee;
+
+        }
+
+
+        .detail-box strong {
+
+            display: block;
+
+            font-size: 13px;
+
+            color: #777;
+
+            margin-bottom: 5px;
+
+        }
+
+
+        /* ==================================
+           MAP
+        ================================== */
+
+        #liveMap {
+
+            width: 100%;
+
+            height: 430px;
+
+            margin-top: 22px;
+
+            border-radius: 17px;
+
+            overflow: hidden;
+
+            border: 1px solid #ddd;
+
+        }
+
+
+        /* ==================================
+           BUTTONS
+        ================================== */
+
+        .driver-buttons {
+
+            display: flex;
+
+            gap: 10px;
+
+            flex-wrap: wrap;
+
+            justify-content: center;
+
+            margin-top: 18px;
+
+        }
+
+
+        .driver-buttons button {
+
+            border: none;
+
+            border-radius: 12px;
+
+            padding:
+                12px 24px;
+
+            background: #ffd000;
+
+            color: #111;
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            min-width: 120px;
+
+        }
+
+
+        .driver-buttons button:hover {
+
+            opacity: 0.9;
+
+        }
+
+
+        .cancel-button {
+
+            background:
+                #ff4d6d !important;
+
+            color: #fff !important;
+
+        }
+
+
+        /* ==================================
+           COMPLETED
+        ================================== */
+
+        .completed-box {
+
+            display: none;
+
+            margin-top: 20px;
+
+            padding: 20px;
+
+            text-align: center;
+
+            border-radius: 15px;
+
+            background: #e9f8ed;
+
+        }
+
+
+        .completed-box h2 {
+
+            margin-top: 0;
+
+        }
+
+
+        /* ==================================
+           ERROR
+        ================================== */
+
+        .error-box {
+
+            display: none;
+
+            margin-top: 20px;
+
+            padding: 16px;
+
+            text-align: center;
+
+            border-radius: 14px;
+
+            background: #fff0f2;
+
+            color: #c62828;
+
+        }
+
+
+        /* ==================================
+           MOBILE
+        ================================== */
+
+        @media (max-width: 650px) {
+
+            .tracking-page {
+
+                padding:
+                    12px 8px;
+
+            }
+
+
+            .tracking-card {
+
+                padding: 15px;
+
+                border-radius: 16px;
+
+            }
+
+
+            .tracking-title.main {
+
+                font-size: 27px;
+
+            }
+
+
+            .tracking-title.sub {
+
+                font-size: 22px;
+
+            }
+
+
+            .ride-info {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            .ride-details {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            #liveMap {
+
+                height: 350px;
+
+            }
+
+
+            .driver-buttons button {
+
+                flex: 1;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <div class="tracking-page">
+
+        <div class="tracking-card">
+
+
+            <!-- HEADER -->
+
+            <h1
+                class="tracking-title main"
+            >
+                🚖 SitamarhiCab
+            </h1>
+
+
+            <h2
+                class="tracking-title sub"
+            >
+                Your Ride
+            </h2>
+
+
+            <!-- STATUS -->
+
+            <p id="statusText">
+                🔎 Loading your ride...
+            </p>
+
+
+            <!-- LOADER -->
+
+            <div
+                class="loader"
+                id="loader"
+            ></div>
+
+
+            <!-- ERROR -->
+
+            <div
+                class="error-box"
+                id="errorBox"
+            ></div>
+
+
+            <!-- DRIVER -->
+
+            <div
+                id="driverCard"
+                class="driver-card"
+            >
+
+                <img
+                    id="driverPhoto"
+                    class="driver-photo"
+                    src="https://randomuser.me/api/portraits/men/45.jpg"
+                    alt="Driver"
+                >
+
+
+                <h2 id="driverName">
+                    Driver
+                </h2>
+
+
+                <p>
+                    ⭐
+                    <span id="driverRating">
+                        New
+                    </span>
+                    Rating
+                </p>
+
+
+                <p>
+                    🚗
+                    <span id="driverVehicle">
+                        -
+                    </span>
+                </p>
+
+
+                <p>
+                    🔢
+                    <span id="driverVehicleNumber">
+                        Vehicle number unavailable
+                    </span>
+                </p>
+
+
+                <p>
+                    <strong>
+                        Status:
+                    </strong>
+
+                    <span id="driverRideStatus">
+                        Waiting for driver
+                    </span>
+                </p>
+
+
+                <p id="driverAwayText">
+                    📍 Driver location waiting...
+                </p>
+
+
+                <!-- BUTTONS -->
+
+                <div
+                    class="driver-buttons"
+                >
+
+                    <button
+                        id="callButton"
+                        type="button"
+                    >
+                        📞 Call
+                    </button>
+
+
+                    <button
+                        id="chatButton"
+                        type="button"
+                    >
+                        💬 Chat
+                    </button>
+
+
+                    <button
+                        id="cancelButton"
+                        type="button"
+                        class="cancel-button"
+                    >
+                        ❌ Cancel
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- DISTANCE / ETA -->
+
+            <div class="ride-info">
+
+
+                <div class="info-box">
+
+                    <span>
+                        Driver Distance
+                    </span>
+
+                    <strong id="distance">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <div class="info-box">
+
+                    <span>
+                        ETA
+                    </span>
+
+                    <strong id="eta">
+                        --
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- RIDE DETAILS -->
+
+            <div class="ride-details">
+
+
+                <div class="detail-box">
+
+                    <strong>
+                        Pickup
+                    </strong>
+
+                    <span id="pickupText">
+                        -
+                    </span>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <strong>
+                        Drop
+                    </strong>
+
+                    <span id="dropText">
+                        -
+                    </span>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <strong>
+                        Vehicle
+                    </strong>
+
+                    <span id="vehicleText">
+                        -
+                    </span>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <strong>
+                        Fare
+                    </strong>
+
+                    <span id="fareText">
+                        ₹0
+                    </span>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <strong>
+                        Payment
+                    </strong>
+
+                    <span id="paymentText">
+                        -
+                    </span>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <strong>
+                        Ride Status
+                    </strong>
+
+                    <span id="rideStatusText">
+                        -
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- MAP -->
+
+            <div
+                id="liveMap"
+            ></div>
+
+
+            <!-- COMPLETED -->
+
+            <div
+                id="completedBox"
+                class="completed-box"
+            >
+
+                <h2>
+                    🎉 Ride Completed
+                </h2>
+
+                <p>
+                    Thank you for riding with
+                    SitamarhiCab.
+                </p>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <!-- LEAFLET -->
+
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    ></script>
+
+
+    <!-- IMPORTANT -->
+
+    <!-- File must be named exactly:
+         search-driver.js -->
+
+    <script
+        type="module"
+        src="search-driver.js"
+    ></script>
+
+
+</body>
+
+</html>

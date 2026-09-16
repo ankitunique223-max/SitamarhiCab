@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Driver Dashboard | Sitamarhi Cab</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="driver-dashboard">
+
+    <!-- Sidebar -->
+
+    <div class="driver-sidebar">
+
+        <h2>🚖 Driver Panel</h2>
+
+        <ul>
+
+            <li class="active">
+                <i class="fa-solid fa-house"></i>
+                Dashboard
+            </li>
+
+            <li>
+                <i class="fa-solid fa-road"></i>
+                Today's Trips
+            </li>
+
+            <li>
+                <i class="fa-solid fa-wallet"></i>
+                Earnings
+            </li>
+
+            <li>
+                <i class="fa-solid fa-star"></i>
+                Rating
+            </li>
+
+            <li>
+                <i class="fa-solid fa-user"></i>
+                Profile
+            </li>
+
+            <li>
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <a href="#" id="driverLogout">Logout</a>
+            </li>
+
+        </ul>
+
+    </div>
+
+    <!-- Main -->
+
+    <div class="driver-main">
+
+        <div class="driver-topbar">
+
+            <h1>Welcome Driver 👋</h1>
+
+            <label class="switch">
+
+                <input type="checkbox" id="onlineSwitch">
+
+                <span class="slider"></span>
+
+            </label>
+
+        </div>
+
+        <!-- Statistics -->
+
+        <div class="driver-cards">
+
+            <div class="driver-card">
+
+                <i class="fa-solid fa-wallet"></i>
+
+                <h2 id="todayEarnings">₹0</h2>
+
+                <p>Today's Earnings</p>
+
+            </div>
+
+            <div class="driver-card">
+
+                <i class="fa-solid fa-car-side"></i>
+
+               <h2 id="todayTrips">0</h2>
+
+                <p>Trips Completed</p>
+
+            </div>
+
+            <div class="driver-card">
+
+                <i class="fa-solid fa-star"></i>
+
+                <h2>4.9</h2>
+
+                <p>Rating</p>
+
+            </div>
+
+        </div>
+
+        <div class="ride-request">
+
+    <h2>🚖 My Assigned Rides</h2>
+    <div id="rideList">
+
+        <p>No ride requests available.</p>
+
+    </div>
+
+</div>
+
+    </div>
+
+</div>
+
+<script type="module" src="driver.js"></script>
+</body>
+</html>

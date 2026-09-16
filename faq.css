@@ -1,0 +1,138 @@
+/* ==========================================
+   FAQ PAGE
+========================================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+/* Header */
+
+.faq-header{
+    background:linear-gradient(135deg,#FFD700,#FFA500);
+    color:#111;
+    text-align:center;
+    padding:80px 20px;
+}
+
+.faq-header h1{
+    font-size:42px;
+    margin-bottom:10px;
+}
+
+.faq-header p{
+    font-size:18px;
+}
+
+/* FAQ Container */
+
+.faq-container{
+    width:90%;
+    max-width:900px;
+    margin:60px auto;
+}
+
+/* FAQ Item */
+
+.faq-item{
+    background:#fff;
+    border-radius:10px;
+    margin-bottom:20px;
+    box-shadow:0 5px 15px rgba(0,0,0,.1);
+    overflow:hidden;
+}
+
+/* Question */
+
+.faq-question{
+    width:100%;
+    background:#fff;
+    border:none;
+    outline:none;
+    padding:20px;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    transition:.3s;
+}
+
+.faq-question:hover{
+    background:#FFD700;
+}
+
+/* Answer */
+
+.faq-answer{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .4s ease;
+    background:#f8f8f8;
+}
+
+.faq-answer p{
+    padding:20px;
+    color:#555;
+    line-height:1.7;
+}
+
+/* Active */
+
+.faq-item.active .faq-answer{
+    max-height:200px;
+}
+
+.faq-item.active .faq-question i{
+    transform:rotate(180deg);
+}
+
+.faq-question i{
+    transition:.3s;
+}
+
+/* Footer */
+
+.faq-footer{
+    background:#111;
+    color:#fff;
+    text-align:center;
+    padding:30px;
+    margin-top:50px;
+}
+
+.faq-footer a{
+    color:#FFD700;
+    text-decoration:none;
+    display:inline-block;
+    margin-top:10px;
+}
+
+.faq-footer a:hover{
+    text-decoration:underline;
+}
+
+/* Responsive */
+
+@media(max-width:768px){
+
+.faq-header h1{
+    font-size:30px;
+}
+
+.faq-question{
+    font-size:16px;
+    padding:16px;
+}
+
+.faq-answer p{
+    font-size:15px;
+}
+
+}

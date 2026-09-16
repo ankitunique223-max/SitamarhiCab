@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Ride Invoice | SitamarhiCab</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f3f4f6;
+            padding: 30px 15px;
+            color: #222;
+        }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #222;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .logo span {
+            color: #f5b400;
+        }
+
+        .invoice-title {
+            text-align: right;
+        }
+
+        .invoice-title h1 {
+            font-size: 30px;
+            margin-bottom: 5px;
+        }
+
+        .invoice-title p {
+            color: #777;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .info-box {
+            padding: 12px;
+            background: #f8f8f8;
+            border-radius: 7px;
+        }
+
+        .info-box strong {
+            display: block;
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 4px;
+        }
+
+        .fare-box {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .fare-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .fare-row:last-child {
+            border-bottom: none;
+        }
+
+        .total {
+            font-size: 20px;
+            font-weight: bold;
+            background: #f5f5f5;
+        }
+
+        .payment-status {
+            font-weight: bold;
+        }
+
+        .paid {
+            color: green;
+        }
+
+        .pending {
+            color: #d88a00;
+        }
+
+        .rating {
+            font-size: 22px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        button,
+        a {
+            flex: 1;
+            padding: 13px;
+            border: none;
+            border-radius: 7px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .print-btn {
+            background: #111;
+            color: white;
+        }
+
+        .back-btn {
+            background: #eee;
+            color: #222;
+        }
+
+        .print-btn:hover {
+            background: #f5b400;
+            color: #111;
+        }
+
+        .back-btn:hover {
+            background: #ddd;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+            color: #777;
+        }
+
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: red;
+        }
+
+        @media (max-width: 600px) {
+
+            body {
+                padding: 10px;
+            }
+
+            .invoice-container {
+                padding: 20px;
+            }
+
+            .invoice-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .invoice-title {
+                text-align: left;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+        }
+
+        @media print {
+
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .invoice-container {
+                box-shadow: none;
+                max-width: 100%;
+                border-radius: 0;
+            }
+
+            .actions {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="invoice-container" id="invoiceContainer">
+
+        <div class="loading" id="loading">
+            Loading invoice...
+        </div>
+
+    </div>
+
+
+    <script type="module">
+
+        import { auth, db } from "./firebase.js";
+
+        import {
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+        import {
+            doc,
+            getDoc
+        } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+
+        const invoiceContainer =
+            document.getElementById("invoiceContainer");
+
+
+        // ==============================
+        // GET RIDE ID
+        // ==============================
+
+        const params =
+            new URLSearchParams(window.location.search);
+
+        const rideId =
+            params.get("rideId");
+
+
+        // ==============================
+        // AUTH
+        // ==============================
+
+        onAuthStateChanged(auth, async (user) => {
+
+            if (!user) {
+
+                window.location.href =
+                    "login.html";
+
+                return;
+            }
+
+
+            if (!rideId) {
+
+                showError(
+                    "Ride ID is missing."
+                );
+
+                return;
+            }
+
+
+            await loadInvoice(
+                user.uid,
+                rideId
+            );
+
+        });
+
+
+        // ==============================
+        // LOAD INVOICE
+        // ==============================
+
+        async function loadInvoice(
+            userId,
+            rideId
+        ) {
+
+            try {
+
+                const rideRef =
+                    doc(
+                        db,
+                        "rides",
+                        rideId
+                    );
+
+
+                const rideSnap =
+                    await getDoc(rideRef);
+
+
+                if (!rideSnap.exists()) {
+
+                    showError(
+                        "Ride not found."
+                    );
+
+                    return;
+                }
+
+
+                const ride =
+                    rideSnap.data();
+
+
+                // ==============================
+                // SECURITY CHECK
+                // ==============================
+
+                if (ride.userId !== userId) {
+
+                    showError(
+                        "You are not allowed to view this invoice."
+                    );
+
+                    return;
+                }
+
+
+                renderInvoice(
+                    ride,
+                    rideId
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Invoice error:",
+                    error
+                );
+
+                showError(
+                    "Unable to load invoice."
+                );
+
+            }
+
+        }
+
+
+        // ==============================
+        // RENDER INVOICE
+        // ==============================
+
+        function renderInvoice(
+            ride,
+            rideId
+        ) {
+
+            const fare =
+                ride.finalFare ??
+                ride.fare ??
+                0;
+
+
+            const payment =
+                ride.payment ||
+                "Cash";
+
+
+            const paymentStatus =
+                ride.paymentStatus ||
+                "pending";
+
+
+            const distance =
+                ride.distance
+                    ? Number(ride.distance).toFixed(2)
+                    : "N/A";
+
+
+            const date =
+                formatDate(
+                    ride.completedAt ||
+                    ride.createdAt
+                );
+
+
+            const rating =
+                ride.userRating
+                    ? "⭐".repeat(
+                        Number(ride.userRating)
+                    )
+                    : "Not rated";
+
+
+            invoiceContainer.innerHTML = `
+
+                <div class="invoice-header">
+
+                    <div>
+
+                        <div class="logo">
+                            Sitamarhi<span>Cab</span>
+                        </div>
+
+                        <p style="margin-top:6px;color:#777;">
+                            Safe & Reliable Ride Service
+                        </p>
+
+                    </div>
+
+
+                    <div class="invoice-title">
+
+                        <h1>INVOICE</h1>
+
+                        <p>
+                            Ride ID:
+                            ${escapeHTML(rideId)}
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="section">
+
+                    <div class="section-title">
+                        Ride Information
+                    </div>
+
+
+                    <div class="info-grid">
+
+                        <div class="info-box">
+
+                            <strong>Pickup</strong>
+
+                            ${escapeHTML(
+                                ride.pickup || "N/A"
+                            )}
+
+                        </div>
+
+
+                        <div class="info-box">
+
+                            <strong>Drop</strong>
+
+                            ${escapeHTML(
+                                ride.drop || "N/A"
+                            )}
+
+                        </div>
+
+
+                        <div class="info-box">
+
+                            <strong>Date & Time</strong>
+
+                            ${date}
+
+                        </div>
+
+
+                        <div class="info-box">
+
+                            <strong>Vehicle</strong>
+
+                            ${escapeHTML(
+                                ride.vehicle || "N/A"
+                            )}
+
+                        </div>
+
+
+                        <div class="info-box">
+
+                            <strong>Distance</strong>
+
+                            ${distance} km
+
+                        </div>
+
+
+                        <div class="info-box">
+
+                            <strong>Ride Status</strong>
+
+                            ${escapeHTML(
+                                ride.status || "N/A"
+                            )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="section">
+
+                    <div class="section-title">
+                        Payment Details
+                    </div>
+
+
+                    <div class="fare-box">
+
+                        <div class="fare-row">
+
+                            <span>Ride Fare</span>
+
+                            <span>
+                                ₹${fare}
+                            </span>
+
+                        </div>
+
+
+                        <div class="fare-row">
+
+                            <span>Payment Method</span>
+
+                            <span>
+                                ${escapeHTML(payment)}
+                            </span>
+
+                        </div>
+
+
+                        <div class="fare-row">
+
+                            <span>Payment Status</span>
+
+                            <span class="payment-status
+                                ${
+                                    paymentStatus === "paid"
+                                        ? "paid"
+                                        : "pending"
+                                }">
+
+                                ${escapeHTML(
+                                    paymentStatus
+                                )}
+
+                            </span>
+
+                        </div>
+
+
+                        <div class="fare-row total">
+
+                            <span>Total Amount</span>
+
+                            <span>
+                                ₹${fare}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="section">
+
+                    <div class="section-title">
+                        Driver & Rating
+                    </div>
+
+
+                    <div class="info-grid">
+
+                        <div class="info-box">
+
+                            <strong>Driver</strong>
+
+                            ${
+                                ride.driverId
+                                    ? "Assigned Driver"
+                                    : "N/A"
+                            }
+
+                        </div>
+
+
+                        <div class="info-box">
+
+                            <strong>Your Rating</strong>
+
+                            <div class="rating">
+                                ${rating}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="actions">
+
+                    <button
+                        class="print-btn"
+                        id="printInvoice">
+                        🖨 Print / Save PDF
+                    </button>
+
+
+                    <a
+                        href="ride-history.html"
+                        class="back-btn">
+                        ⬅ Ride History
+                    </a>
+
+                </div>
+
+            `;
+
+
+            document
+                .getElementById("printInvoice")
+                .addEventListener(
+                    "click",
+                    () => {
+                        window.print();
+                    }
+                );
+
+        }
+
+
+        // ==============================
+        // DATE
+        // ==============================
+
+        function formatDate(timestamp) {
+
+            if (!timestamp) {
+                return "N/A";
+            }
+
+
+            try {
+
+                const date =
+                    timestamp.toDate
+                        ? timestamp.toDate()
+                        : new Date(timestamp);
+
+
+                return date.toLocaleString(
+                    "en-IN",
+                    {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    }
+                );
+
+            } catch (error) {
+
+                return "N/A";
+
+            }
+
+        }
+
+
+        // ==============================
+        // HTML SECURITY
+        // ==============================
+
+        function escapeHTML(value) {
+
+            if (
+                value === null ||
+                value === undefined
+            ) {
+                return "";
+            }
+
+
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+
+        }
+
+
+        // ==============================
+        // ERROR
+        // ==============================
+
+        function showError(text) {
+
+            invoiceContainer.innerHTML = `
+
+                <div class="error">
+
+                    <h2>❌ ${escapeHTML(text)}</h2>
+
+                    <br>
+
+                    <a
+                        href="ride-history.html"
+                        class="back-btn">
+                        Back to Ride History
+                    </a>
+
+                </div>
+
+            `;
+
+        }
+
+    </script>
+
+</body>
+
+</html>

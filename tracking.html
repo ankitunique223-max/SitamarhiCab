@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Track Ride | SitamarhiCab</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+<body>
+
+<div class="tracking-page">
+
+<div class="map-area">
+
+    <div id="map"></div>
+
+</div>
+
+<div class="tracking-panel">
+
+<h1>Live Ride Tracking</h1>
+
+<h2>Driver Arriving...</h2>
+
+<div class="driver-info">
+
+<img
+src="https://randomuser.me/api/portraits/men/45.jpg">
+
+<div>
+
+<h3>Ravi Kumar</h3>
+
+<p>⭐ 4.9 Rating</p>
+
+<p>Swift Dzire</p>
+
+<p>BR30AB1234</p>
+
+</div>
+
+</div>
+
+<div class="ride-details">
+
+<p><strong>Pickup:</strong> Sitamarhi Bus Stand</p>
+
+<p><strong>Drop:</strong> Janaki Mandir</p>
+
+<p><strong>ETA:</strong> <span id="eta">4 Minutes</span></p>
+
+<p><strong>Status:</strong> <span id="rideStatus">Driver is Coming</span></p>
+
+</div>
+
+<div class="tracking-buttons">
+
+<button onclick="callDriver()">
+📞 Call
+</button>
+
+<button onclick="chatDriver()">
+💬 Chat
+</button>
+
+<button onclick="cancelRide()">
+❌ Cancel
+</button>
+
+<button id="paymentBtn">
+💳 Proceed to Payment
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+<script
+    type="module"
+    src="tracking.js">
+</script>
+
+</body>
+
+</html>

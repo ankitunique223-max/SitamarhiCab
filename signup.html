@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - SitamarhiCab</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+</head>
+
+<body>
+
+<div class="auth-page">
+
+    <div class="auth-card">
+
+        <div class="auth-logo">
+            🚖 SitamarhiCab
+        </div>
+
+        <h2>Create Account</h2>
+
+        <p>Register to start your journey</p>
+
+        <form id="signupForm">
+
+            <div class="input-box">
+                <i class="fa-solid fa-user"></i>
+               <input type="text" id="name" placeholder="Full Name" required>
+            </div>
+
+            <div class="input-box">
+                <i class="fa-solid fa-envelope"></i>
+                <input type="email" id="email" placeholder="Email Address" required>
+            </div>
+
+            <div class="input-box">
+                <i class="fa-solid fa-phone"></i>
+                <input type="tel" id="phone" placeholder="Mobile Number" required>
+            </div>
+
+            <div class="input-box">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="signupPassword" placeholder="Password" required>
+                <i class="fa-solid fa-eye eye-icon" id="toggleSignupPassword"></i>
+            </div>
+
+            <div class="input-box">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+                <i class="fa-solid fa-eye eye-icon" id="toggleConfirmPassword"></i>
+            </div>
+
+            <button type="submit" class="auth-btn">
+                <div class="input-box">
+    <i class="fa-solid fa-user-tag"></i>
+
+    <select id="role" required>
+
+        <option value="">Select Role</option>
+
+        <option value="user">User</option>
+
+        <option value="driver">Driver</option>
+
+    </select>
+
+</div>
+                Create Account
+            </button>
+
+        </form>
+
+        <div class="divider">
+            <span>OR</span>
+        </div>
+
+        <button class="google-btn">
+            <i class="fa-brands fa-google"></i>
+            Continue with Google
+        </button>
+
+        <div class="bottom-text">
+            Already have an account?
+            <a href="login.html">Login</a>
+        </div>
+
+    </div>
+
+</div>
+
+<script type="module" src="auth.js"></script>
+
+</body>
+</html>

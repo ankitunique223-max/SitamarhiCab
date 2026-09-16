@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Dashboard | SitamarhiCab</title>
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6f9;
+            color: #222;
+        }
+
+        .admin-dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ================= SIDEBAR ================= */
+
+        .admin-sidebar {
+            width: 250px;
+            background: #111827;
+            color: white;
+            padding: 25px 15px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto;
+        }
+
+        .admin-sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 21px;
+        }
+
+        .admin-sidebar ul {
+            list-style: none;
+        }
+
+        .admin-sidebar li {
+            margin: 7px 0;
+        }
+
+        .admin-sidebar a,
+        .sidebar-btn {
+            width: 100%;
+            display: block;
+            padding: 13px 15px;
+            border-radius: 8px;
+            color: #d1d5db;
+            text-decoration: none;
+            background: transparent;
+            border: none;
+            text-align: left;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .admin-sidebar a:hover,
+        .sidebar-btn:hover,
+        .admin-sidebar .active {
+            background: #2563eb;
+            color: white;
+        }
+
+        .admin-sidebar i {
+            width: 24px;
+        }
+
+        /* ================= MAIN ================= */
+
+        .admin-main {
+            margin-left: 250px;
+            width: calc(100% - 250px);
+            padding: 25px;
+        }
+
+        /* ================= TOPBAR ================= */
+
+        .admin-topbar {
+            background: white;
+            padding: 18px 22px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,.06);
+            margin-bottom: 25px;
+        }
+
+        .admin-topbar h1 {
+            font-size: 25px;
+        }
+
+        .admin-user {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .admin-user i {
+            font-size: 24px;
+            color: #2563eb;
+        }
+
+        /* ================= STAT CARDS ================= */
+
+        .admin-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .admin-card {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.06);
+        }
+
+        .admin-card i {
+            font-size: 25px;
+            color: #2563eb;
+            margin-bottom: 12px;
+        }
+
+        .admin-card h2 {
+            font-size: 27px;
+            margin-bottom: 5px;
+        }
+
+        .admin-card p {
+            color: #6b7280;
+        }
+
+        /* ================= SECTIONS ================= */
+
+        .section {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.06);
+            margin-bottom: 25px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .section-header h2 {
+            font-size: 20px;
+        }
+
+        .refresh-btn {
+            border: none;
+            background: #2563eb;
+            color: white;
+            padding: 9px 15px;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        /* ================= DRIVER CARDS ================= */
+
+        .driver-grid,
+        .user-grid,
+        .ride-grid,
+        .review-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .item-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 17px;
+            background: #fafafa;
+        }
+
+        .item-card h3 {
+            margin-bottom: 10px;
+        }
+
+        .item-card p {
+            margin: 7px 0;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .btn {
+            border: none;
+            padding: 9px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+
+        .approve-btn {
+            background: #16a34a;
+            color: white;
+        }
+
+        .reject-btn {
+            background: #dc2626;
+            color: white;
+        }
+
+        .assign-btn {
+            background: #2563eb;
+            color: white;
+        }
+
+        /* ================= STATUS ================= */
+
+        .status {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-assigned {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-accepted {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .status-ongoing {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* ================= TABLE ================= */
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f8fafc;
+        }
+
+        /* ================= SELECT ================= */
+
+        select {
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        /* ================= EMPTY ================= */
+
+        .empty {
+            text-align: center;
+            padding: 25px;
+            color: #777;
+        }
+
+        .loading {
+            padding: 20px;
+            text-align: center;
+            color: #777;
+        }
+
+        /* ================= ALERT ================= */
+
+        #adminMessage {
+            display: none;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background: #dcfce7;
+            color: #166534;
+            font-weight: bold;
+        }
+
+        /* ================= RESPONSIVE ================= */
+
+        @media(max-width: 1000px) {
+
+            .admin-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .driver-grid,
+            .user-grid,
+            .ride-grid,
+            .review-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media(max-width: 700px) {
+
+            .admin-sidebar {
+                width: 70px;
+                padding: 15px 8px;
+            }
+
+            .admin-sidebar h2 {
+                font-size: 0;
+            }
+
+            .admin-sidebar h2:first-letter {
+                font-size: 25px;
+            }
+
+            .admin-sidebar a span,
+            .sidebar-btn span {
+                display: none;
+            }
+
+            .admin-sidebar i {
+                width: auto;
+                font-size: 18px;
+            }
+
+            .admin-main {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+                padding: 15px;
+            }
+
+            .admin-topbar h1 {
+                font-size: 19px;
+            }
+
+            .admin-user span {
+                display: none;
+            }
+
+            .admin-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media(max-width:700px){
+
+    .analytics-grid{
+        grid-template-columns:1fr !important;
+    }
+
+}
+
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="admin-dashboard">
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="admin-sidebar">
+
+        <h2>🚖 SitamarhiCab</h2>
+
+        <ul>
+
+            <li class="active">
+                <button class="sidebar-btn"
+                        onclick="scrollToSection('dashboardSection')">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </button>
+            </li>
+
+            <li>
+                <button class="sidebar-btn"
+                        onclick="scrollToSection('driversSection')">
+                    <i class="fa-solid fa-car"></i>
+                    <span>Drivers</span>
+                </button>
+            </li>
+
+            <li>
+                <button class="sidebar-btn"
+                        onclick="scrollToSection('usersSection')">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Users</span>
+                </button>
+            </li>
+
+            <li>
+                <button class="sidebar-btn"
+                        onclick="scrollToSection('ridesSection')">
+                    <i class="fa-solid fa-route"></i>
+                    <span>Rides</span>
+                </button>
+            </li>
+
+            <li>
+                <button class="sidebar-btn"
+                        onclick="scrollToSection('reviewsSection')">
+                    <i class="fa-solid fa-star"></i>
+                    <span>Reviews</span>
+                </button>
+                <li>
+
+    <button
+        class="sidebar-btn"
+        onclick="scrollToSection('analyticsSection')">
+
+        <i class="fa-solid fa-chart-pie"></i>
+
+        <span>
+            Analytics
+        </span>
+
+    </button>
+
+</li>
+            </li>
+
+            <li>
+                <button class="sidebar-btn"
+                        onclick="location.reload()">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span>Refresh</span>
+                </button>
+            </li>
+
+            <li>
+                <a href="login.html">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Logout</span>
+                </a>
+            </li>
+
+        </ul>
+
+    </aside>
+
+
+    <!-- ================= MAIN ================= -->
+
+    <main class="admin-main">
+
+        <div id="adminMessage"></div>
+
+        <!-- TOPBAR -->
+
+        <div class="admin-topbar">
+
+            <h1>Admin Dashboard</h1>
+
+            <div class="admin-user">
+
+                <i class="fa-solid fa-user-shield"></i>
+
+                <span id="adminName">
+                    Administrator
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================= DASHBOARD ================= -->
+
+        <section
+            id="dashboardSection"
+            class="section">
+
+            <div class="section-header">
+
+                <h2>
+                    📊 System Overview
+                </h2>
+
+                <button
+                    class="refresh-btn"
+                    onclick="location.reload()">
+
+                    <i class="fa-solid fa-rotate"></i>
+                    Refresh
+
+                </button>
+
+            </div>
+
+
+            <div class="admin-cards">
+
+                <div class="admin-card">
+
+                    <i class="fa-solid fa-users"></i>
+
+                    <h2 id="totalUsers">
+                        0
+                    </h2>
+
+                    <p>
+                        Total Users
+                    </p>
+
+                </div>
+
+
+                <div class="admin-card">
+
+                    <i class="fa-solid fa-car"></i>
+
+                    <h2 id="totalDrivers">
+                        0
+                    </h2>
+
+                    <p>
+                        Total Drivers
+                    </p>
+
+                </div>
+
+
+                <div class="admin-card">
+
+                    <i class="fa-solid fa-circle-check"></i>
+
+                    <h2 id="onlineDrivers">
+                        0
+                    </h2>
+
+                    <p>
+                        Online Drivers
+                    </p>
+
+                </div>
+
+
+                <div class="admin-card">
+
+                    <i class="fa-solid fa-route"></i>
+
+                    <h2 id="totalRides">
+                        0
+                    </h2>
+
+                    <p>
+                        Total Rides
+                    </p>
+
+                </div>
+
+
+                <div class="admin-card">
+
+                    <i class="fa-solid fa-spinner"></i>
+
+                    <h2 id="activeRides">
+                        0
+                    </h2>
+
+                    <p>
+                        Active Rides
+                    </p>
+
+                </div>
+
+
+                <div class="admin-card">
+
+                    <i class="fa-solid fa-user-clock"></i>
+
+                    <h2 id="pendingDrivers">
+                        0
+                    </h2>
+
+                    <p>
+                        Pending Drivers
+                    </p>
+
+                </div>
+
+
+                <div class="admin-card">
+
+                    <i class="fa-solid fa-money-bill-wave"></i>
+
+                    <h2 id="totalRevenue">
+                        ₹0
+                    </h2>
+
+                    <p>
+                        Total Revenue
+                    </p>
+
+                </div>
+
+
+                <div class="admin-card">
+
+                    <i class="fa-solid fa-credit-card"></i>
+
+                    <h2 id="paidRides">
+                        0
+                    </h2>
+
+                    <p>
+                        Paid Rides
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+        <!-- ================= ANALYTICS ================= -->
+
+<section id="analyticsSection" class="section">
+
+    <div class="section-header">
+        <h2>📊 Advanced Analytics</h2>
+
+        <button
+            class="refresh-btn"
+            onclick="renderAnalytics()">
+            <i class="fa-solid fa-chart-line"></i>
+            Refresh Analytics
+        </button>
+    </div>
+
+    <!-- ANALYTICS SUMMARY -->
+
+    <div class="admin-cards">
+
+        <div class="admin-card">
+            <i class="fa-solid fa-check-circle"></i>
+
+            <h2 id="completedRides">
+                0
+            </h2>
+
+            <p>
+                Completed Rides
+            </p>
+        </div>
+
+        <div class="admin-card">
+            <i class="fa-solid fa-ban"></i>
+
+            <h2 id="cancelledRides">
+                0
+            </h2>
+
+            <p>
+                Cancelled Rides
+            </p>
+        </div>
+
+        <div class="admin-card">
+            <i class="fa-solid fa-clock"></i>
+
+            <h2 id="pendingRides">
+                0
+            </h2>
+
+            <p>
+                Pending Rides
+            </p>
+        </div>
+
+        <div class="admin-card">
+            <i class="fa-solid fa-star"></i>
+
+            <h2 id="averageRating">
+                0.0
+            </h2>
+
+            <p>
+                Average Rating
+            </p>
+        </div>
+
+    </div>
+
+
+    <!-- CHART GRID -->
+
+    <div
+        style="
+            display:grid;
+            grid-template-columns:repeat(2,1fr);
+            gap:20px;
+        "
+        class="analytics-grid">
+
+
+        <!-- RIDE STATUS -->
+
+        <div class="item-card">
+
+            <h3>
+                🚕 Ride Status
+            </h3>
+
+            <div
+                style="
+                    height:300px;
+                    position:relative;
+                ">
+
+                <canvas
+                    id="rideStatusChart">
+                </canvas>
+
+            </div>
+
+        </div>
+
+
+        <!-- REVENUE -->
+
+        <div class="item-card">
+
+            <h3>
+                💰 Revenue by Vehicle
+            </h3>
+
+            <div
+                style="
+                    height:300px;
+                    position:relative;
+                ">
+
+                <canvas
+                    id="vehicleRevenueChart">
+                </canvas>
+
+            </div>
+
+        </div>
+
+
+        <!-- MONTHLY REVENUE -->
+
+        <div class="item-card">
+
+            <h3>
+                📈 Monthly Revenue
+            </h3>
+
+            <div
+                style="
+                    height:300px;
+                    position:relative;
+                ">
+
+                <canvas
+                    id="monthlyRevenueChart">
+                </canvas>
+
+            </div>
+
+        </div>
+
+
+        <!-- RATING -->
+
+        <div class="item-card">
+
+            <h3>
+                ⭐ Rating Distribution
+            </h3>
+
+            <div
+                style="
+                    height:300px;
+                    position:relative;
+                ">
+
+                <canvas
+                    id="ratingChart">
+                </canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+        <!-- ================= PENDING DRIVERS ================= -->
+
+        <section
+            id="driversSection"
+            class="section">
+
+            <div class="section-header">
+
+                <h2>
+                    ⏳ Pending Driver Approvals
+                </h2>
+
+                <button
+                    class="refresh-btn"
+                    onclick="loadPendingDrivers()">
+
+                    Refresh
+
+                </button>
+
+            </div>
+
+            <div
+                id="pendingDriverList"
+                class="driver-grid">
+
+                <div class="loading">
+                    Loading drivers...
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= ALL DRIVERS ================= -->
+
+        <section class="section">
+
+            <div class="section-header">
+
+                <h2>
+                    🚕 Drivers
+                </h2>
+
+            </div>
+
+            <div
+                id="allDriverList"
+                class="driver-grid">
+
+                <div class="loading">
+                    Loading drivers...
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= USERS ================= -->
+
+        <section
+            id="usersSection"
+            class="section">
+
+            <div class="section-header">
+
+                <h2>
+                    👥 Registered Users
+                </h2>
+
+            </div>
+
+            <div
+                id="userList"
+                class="user-grid">
+
+                <div class="loading">
+                    Loading users...
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= RIDES ================= -->
+
+        <section
+            id="ridesSection"
+            class="section">
+
+            <div class="section-header">
+
+                <h2>
+                    🚗 Ride Management
+                </h2>
+
+            </div>
+
+            <div
+                id="rideManagement"
+                class="ride-grid">
+
+                <div class="loading">
+                    Loading rides...
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= REVIEWS ================= -->
+
+        <section
+            id="reviewsSection"
+            class="section">
+
+            <div class="section-header">
+
+                <h2>
+                    ⭐ Customer Reviews
+                </h2>
+
+            </div>
+
+            <div
+                id="reviewList"
+                class="review-grid">
+
+                <div class="loading">
+                    Loading reviews...
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+</div>
+
+
+<script type="module" src="admin.js"></script>
+
+</body>
+
+</html>

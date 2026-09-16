@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Ride History | SitamarhiCab</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+
+        .history-page {
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .history-card {
+            max-width: 850px;
+            margin: auto;
+        }
+
+        .ride-item {
+            background: #fff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        .ride-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .ride-top h3 {
+            margin: 0;
+        }
+
+        .ride-item p {
+            margin: 8px 0;
+        }
+
+        .completed {
+            background: #d4edda;
+            color: #155724;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .assigned,
+        .accepted,
+        .ongoing,
+        .pending {
+            background: #fff3cd;
+            color: #856404;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .cancelled {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .ride-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .ride-actions button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .details-btn {
+            background: #222;
+            color: white;
+        }
+
+        .book-btn {
+            background: #f5b400;
+            color: #111;
+        }
+
+        .invoice-btn {
+            background: #198754;
+            color: white;
+        }
+
+        .rating-btn {
+            background: #6f42c1;
+            color: white;
+        }
+
+        .rating-btn:hover {
+            background: #59359a;
+        }
+
+        .invoice-btn:hover {
+            background: #146c43;
+        }
+
+        .details-btn:hover {
+            background: #444;
+        }
+
+        .book-btn:hover {
+            background: #d99e00;
+        }
+
+        .rating-display {
+            margin-top: 12px;
+            padding: 10px;
+            background: #fff8df;
+            border-radius: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 50px 20px;
+            background: white;
+            border-radius: 12px;
+        }
+
+        .history-btn,
+        .home-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            background: #111;
+            color: white;
+        }
+
+        .home-btn {
+            background: #f5b400;
+            color: #111;
+            margin-left: 8px;
+        }
+
+        /* ==========================================
+           RATING MODAL
+        ========================================== */
+
+        .rating-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .rating-box {
+            width: 100%;
+            max-width: 430px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+        }
+
+        .rating-box h2 {
+            margin-bottom: 8px;
+        }
+
+        .rating-driver {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .stars {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .star {
+            font-size: 38px;
+            color: #ccc;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .star.active {
+            color: #f5b400;
+        }
+
+        .rating-text {
+            font-weight: bold;
+            margin-bottom: 15px;
+            min-height: 20px;
+        }
+
+        #reviewText {
+            width: 100%;
+            min-height: 100px;
+            resize: vertical;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        #reviewText:focus {
+            border-color: #f5b400;
+        }
+
+        .rating-modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .rating-modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .submit-rating {
+            background: #f5b400;
+            color: #111;
+        }
+
+        .cancel-rating {
+            background: #222;
+            color: white;
+        }
+
+        .rating-message {
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        .rating-success {
+            color: green;
+        }
+
+        .rating-error {
+            color: red;
+        }
+
+        @media (max-width: 600px) {
+
+            .history-page {
+                padding: 20px 10px;
+            }
+
+            .ride-top {
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .ride-actions {
+                flex-direction: column;
+            }
+
+            .ride-actions button {
+                width: 100%;
+            }
+
+            .history-btn,
+            .home-btn {
+                display: block;
+                margin: 10px 0;
+                text-align: center;
+            }
+
+            .star {
+                font-size: 32px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="history-page">
+
+        <div class="history-card">
+
+            <h1>🚖 Ride History</h1>
+
+            <div id="ridesList">
+
+                <div class="loading">
+                    Loading your rides...
+                </div>
+
+            </div>
+
+            <a href="dashboard.html" class="history-btn">
+                ⬅ Back to Dashboard
+            </a>
+
+            <a href="book.html" class="home-btn">
+                🚕 Book New Ride
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- ==========================================
+         RATING MODAL
+    ========================================== -->
+
+    <div id="ratingModal" class="rating-modal">
+
+        <div class="rating-box">
+
+            <h2>⭐ Rate Your Ride</h2>
+
+            <div id="ratingDriver"
+                 class="rating-driver">
+                Driver
+            </div>
+
+            <div id="stars"
+                 class="stars">
+
+                <span class="star" data-rating="1">★</span>
+                <span class="star" data-rating="2">★</span>
+                <span class="star" data-rating="3">★</span>
+                <span class="star" data-rating="4">★</span>
+                <span class="star" data-rating="5">★</span>
+
+            </div>
+
+            <div id="ratingText"
+                 class="rating-text">
+                Select a rating
+            </div>
+
+            <textarea
+                id="reviewText"
+                placeholder="Write your review (optional)..."
+                maxlength="500"></textarea>
+
+            <div class="rating-modal-actions">
+
+                <button
+                    class="cancel-rating"
+                    id="cancelRating">
+
+                    Cancel
+
+                </button>
+
+                <button
+                    class="submit-rating"
+                    id="submitRating">
+
+                    Submit Rating
+
+                </button>
+
+            </div>
+
+            <div id="ratingMessage"
+                 class="rating-message">
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script type="module"
+            src="./ride-history.js"></script>
+
+</body>
+
+</html>

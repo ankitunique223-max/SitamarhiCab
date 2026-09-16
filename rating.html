@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Your Ride - SitamarhiCab</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #f5f6fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .rating-container {
+            width: 100%;
+            max-width: 480px;
+            background: white;
+            padding: 35px 30px;
+            border-radius: 18px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.12);
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .logo span {
+            color: #f5b400;
+        }
+
+        h1 {
+            margin: 15px 0 8px;
+            color: #222;
+        }
+
+        .subtitle {
+            color: #777;
+            margin-bottom: 25px;
+        }
+
+        .stars {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .star {
+            font-size: 42px;
+            color: #ccc;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .star:hover {
+            transform: scale(1.15);
+        }
+
+        .star.active {
+            color: #ffc107;
+        }
+
+        #ratingText {
+            font-weight: bold;
+            color: #555;
+            min-height: 22px;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 14px;
+            resize: none;
+            outline: none;
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+
+        textarea:focus {
+            border-color: #f5b400;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #111;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #f5b400;
+            color: #111;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #message {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            margin-top: 15px;
+            background: transparent;
+            color: #555;
+            border: 1px solid #ddd;
+        }
+
+        .back-btn:hover {
+            background: #eee;
+            color: #222;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="rating-container">
+
+        <div class="logo">
+            Sitamarhi<span>Cab</span>
+        </div>
+
+        <h1>Rate Your Ride ⭐</h1>
+
+        <p class="subtitle">
+            How was your experience with the driver?
+        </p>
+
+        <div class="stars">
+            <span class="star" data-rating="1">★</span>
+            <span class="star" data-rating="2">★</span>
+            <span class="star" data-rating="3">★</span>
+            <span class="star" data-rating="4">★</span>
+            <span class="star" data-rating="5">★</span>
+        </div>
+
+        <div id="ratingText">
+            Select a rating
+        </div>
+
+        <textarea
+            id="comment"
+            placeholder="Write your review (optional)..."
+            maxlength="500">
+        </textarea>
+
+        <button id="submitRating">
+            Submit Rating
+        </button>
+
+        <button class="back-btn" onclick="window.location.href='dashboard.html'">
+            Back to Dashboard
+        </button>
+
+        <div id="message"></div>
+
+    </div>
+
+    <script type="module" src="./rating.js"></script>
+
+</body>
+</html>

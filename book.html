@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Book Ride - Sitamarhi Cab</title>
+
+
+    <!-- =========================================
+         MAIN CSS
+    ========================================== -->
+
+    <link rel="stylesheet"
+          href="./style.css">
+
+
+    <!-- =========================================
+         FONT AWESOME
+    ========================================== -->
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+
+    <!-- =========================================
+         LEAFLET CSS
+    ========================================== -->
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+
+    <!-- =========================================
+         BOOKING PAGE CSS
+    ========================================== -->
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        body {
+
+            font-family: Arial, sans-serif;
+
+            background: #f5f6f8;
+
+            color: #222;
+
+        }
+
+
+        /* =========================================
+           NAVBAR
+        ========================================== */
+
+        nav {
+
+            width: 100%;
+
+            min-height: 70px;
+
+            background: #000;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 0 40px;
+
+        }
+
+
+        .logo {
+
+            color: #ffd000;
+
+            font-size: 27px;
+
+            font-weight: 700;
+
+        }
+
+
+        nav ul {
+
+            display: flex;
+
+            list-style: none;
+
+            gap: 30px;
+
+        }
+
+
+        nav ul li a {
+
+            color: white;
+
+            text-decoration: none;
+
+            font-size: 16px;
+
+        }
+
+
+        nav ul li a:hover {
+
+            color: #ffd000;
+
+        }
+
+
+        /* =========================================
+           BOOKING CONTAINER
+        ========================================== */
+
+        .booking-container {
+
+            width: min(1100px, 94%);
+
+            margin: 35px auto;
+
+            background: white;
+
+            padding: 30px;
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 8px 30px rgba(0, 0, 0, 0.10);
+
+        }
+
+
+        .booking-container h1 {
+
+            text-align: center;
+
+            font-size: 32px;
+
+            margin-bottom: 30px;
+
+        }
+
+
+        /* =========================================
+           FORM
+        ========================================== */
+
+        #bookingForm {
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 18px;
+
+        }
+
+
+        #bookingForm label {
+
+            display: block;
+
+            font-weight: 600;
+
+            margin-bottom: 8px;
+
+        }
+
+
+        #bookingForm input,
+        #bookingForm select {
+
+            width: 100%;
+
+            padding: 13px;
+
+            border: 1px solid #d5d5d5;
+
+            border-radius: 9px;
+
+            font-size: 15px;
+
+            outline: none;
+
+            background: white;
+
+        }
+
+
+        #bookingForm input:focus,
+        #bookingForm select:focus {
+
+            border-color: #ffd000;
+
+            box-shadow:
+                0 0 0 2px rgba(255, 208, 0, 0.15);
+
+        }
+
+
+        /* =========================================
+           MAP
+        ========================================== */
+
+        .map-wrapper {
+
+            grid-column: 1 / -1;
+
+        }
+
+
+        #map {
+
+            width: 100%;
+
+            height: 350px;
+
+            margin-top: 8px;
+
+            border-radius: 14px;
+
+            overflow: hidden;
+
+            border: 1px solid #ddd;
+
+        }
+
+
+        /* =========================================
+           FARE BOX
+        ========================================== */
+
+        .fare-box {
+
+            grid-column: 1 / -1;
+
+            background: #fffbea;
+
+            border: 2px solid #ffd000;
+
+            border-radius: 14px;
+
+            padding: 25px;
+
+            text-align: center;
+
+            margin-top: 10px;
+
+        }
+
+
+        .fare-box h3 {
+
+            font-size: 20px;
+
+            margin-bottom: 10px;
+
+        }
+
+
+        #fare {
+
+            font-size: 32px;
+
+            color: #d9aa00;
+
+            margin-bottom: 18px;
+
+            font-weight: 700;
+
+        }
+
+
+        .fare-box button,
+        .book-btn {
+
+            border: none;
+
+            background: #ffd000;
+
+            color: #111;
+
+            padding: 13px 28px;
+
+            border-radius: 30px;
+
+            font-size: 16px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+        }
+
+
+        .fare-box button:hover,
+        .book-btn:hover {
+
+            background: #eabb00;
+
+        }
+
+
+        /* =========================================
+           BOOK BUTTON
+        ========================================== */
+
+        .book-btn {
+
+            grid-column: 1 / -1;
+
+            width: 100%;
+
+            padding: 16px;
+
+            font-size: 18px;
+
+            margin-top: 5px;
+
+        }
+
+
+        /* =========================================
+           MOBILE
+        ========================================== */
+
+        @media (max-width: 700px) {
+
+            nav {
+
+                padding: 15px 20px;
+
+                flex-direction: column;
+
+                gap: 15px;
+
+            }
+
+
+            nav ul {
+
+                gap: 18px;
+
+            }
+
+
+            .booking-container {
+
+                padding: 20px;
+
+            }
+
+
+            #bookingForm {
+
+                grid-template-columns: 1fr;
+
+            }
+
+
+            .map-wrapper,
+            .fare-box,
+            .book-btn {
+
+                grid-column: 1;
+
+            }
+
+
+            #map {
+
+                height: 280px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================
+         NAVBAR
+    ========================================== -->
+
+    <nav>
+
+        <div class="logo">
+
+            🚖 Sitamarhi Cab
+
+        </div>
+
+
+        <ul>
+
+            <li>
+                <a href="index.html">
+                    Home
+                </a>
+            </li>
+
+
+            <li>
+                <a href="login.html">
+                    Login
+                </a>
+            </li>
+
+
+            <li>
+                <a href="signup.html">
+                    Signup
+                </a>
+            </li>
+
+        </ul>
+
+    </nav>
+
+
+
+    <!-- =========================================
+         BOOKING SECTION
+    ========================================== -->
+
+    <main class="booking-container">
+
+
+        <h1>
+            Book Your Ride
+        </h1>
+
+
+
+        <form id="bookingForm">
+
+
+            <!-- PICKUP -->
+
+            <div>
+
+                <label for="pickup">
+                    Pickup Location
+                </label>
+
+
+                <input
+                    type="text"
+                    id="pickup"
+                    placeholder="Enter pickup location"
+                    autocomplete="off"
+                    required
+                >
+
+            </div>
+
+
+
+            <!-- DROP -->
+
+            <div>
+
+                <label for="drop">
+                    Drop Location
+                </label>
+
+
+                <input
+                    type="text"
+                    id="drop"
+                    placeholder="Enter drop location"
+                    autocomplete="off"
+                    required
+                >
+
+            </div>
+
+
+
+            <!-- MAP -->
+
+            <div class="map-wrapper">
+
+                <label>
+                    Route Map
+                </label>
+
+
+                <div id="map"></div>
+
+            </div>
+
+
+
+            <!-- DATE -->
+
+            <div>
+
+                <label for="date">
+                    Date
+                </label>
+
+
+                <input
+                    type="date"
+                    id="date"
+                    required
+                >
+
+            </div>
+
+
+
+            <!-- TIME -->
+
+            <div>
+
+                <label for="time">
+                    Time
+                </label>
+
+
+                <input
+                    type="time"
+                    id="time"
+                    required
+                >
+
+            </div>
+
+
+
+            <!-- VEHICLE -->
+
+            <div>
+
+                <label for="vehicle">
+                    Select Vehicle
+                </label>
+
+
+                <select
+                    id="vehicle"
+                    required
+                >
+
+                    <option value="">
+                        Select Vehicle
+                    </option>
+
+
+                    <option value="Bike">
+                        🏍️ Bike
+                    </option>
+
+
+                    <option value="Auto">
+                        🛺 Auto
+                    </option>
+
+
+                    <option value="Mini Cab">
+                        🚕 Mini Cab
+                    </option>
+
+
+                    <option value="Sedan">
+                        🚘 Sedan
+                    </option>
+
+
+                    <option value="SUV">
+                        🚙 SUV
+                    </option>
+
+                </select>
+
+            </div>
+
+
+
+            <!-- PHONE -->
+
+            <div>
+
+                <label for="phone">
+                    Mobile Number
+                </label>
+
+
+                <input
+                    type="tel"
+                    id="phone"
+                    placeholder="Enter 10-digit mobile number"
+                    maxlength="10"
+                    pattern="[0-9]{10}"
+                    required
+                >
+
+            </div>
+
+
+
+            <!-- PAYMENT -->
+
+            <div>
+
+                <label for="payment">
+                    Payment Method
+                </label>
+
+
+                <select
+                    id="payment"
+                    required
+                >
+
+                    <option value="Cash">
+                        💵 Cash
+                    </option>
+
+
+                    <option value="Online">
+                        💳 Online Payment
+                    </option>
+
+                </select>
+
+            </div>
+
+
+
+            <!-- FARE -->
+
+            <div class="fare-box">
+
+                <h3>
+                    Estimated Fare
+                </h3>
+
+
+                <div id="fare">
+                    ₹0
+                </div>
+
+
+                <button
+                    type="button"
+                    onclick="calculateFare()"
+                >
+
+                    Estimate Fare
+
+                </button>
+
+            </div>
+
+
+
+            <!-- BOOK RIDE -->
+
+            <button
+                type="submit"
+                class="book-btn"
+            >
+
+                🚕 Book Ride
+
+            </button>
+
+
+        </form>
+
+    </main>
+
+
+
+    <!-- =========================================
+         RAZORPAY
+    ========================================== -->
+
+    <script
+        src="https://checkout.razorpay.com/v1/checkout.js">
+    </script>
+
+
+
+    <!-- =========================================
+         LEAFLET JS
+    ========================================== -->
+
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
+
+
+    <!-- =========================================
+         MAP JS
+    ========================================== -->
+
+    <script
+        src="./map.js">
+    </script>
+
+<script src="./location-search.js"></script>
+
+    <!-- =========================================
+         BOOKING JS
+    ========================================== -->
+
+    <script
+        type="module"
+        src="./book.js">
+    </script>
+
+
+</body>
+
+</html>

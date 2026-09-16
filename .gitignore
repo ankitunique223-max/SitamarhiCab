@@ -1,0 +1,5 @@
+node_modules/
+.npm-cache/
+firebase-debug.log
+service-account*.json
+firebase-admin*.json

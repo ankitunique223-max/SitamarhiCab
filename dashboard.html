@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dashboard | Sitamarhi Cab</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+</head>
+
+<body>
+    <header><div class="notification-wrapper">
+
+  <button
+    class="notification-btn"
+    onclick="toggleNotificationPanel()"
+    title="Notifications"
+  >
+    🔔
+    <span
+      id="notificationCount"
+      class="notification-count"
+      style="display:none;"
+    >0</span>
+  </button>
+
+  <div
+    id="notificationPanel"
+    class="notification-panel"
+    style="display:none;"
+  >
+
+    <div class="notification-header">
+      <strong>Notifications</strong>
+
+      <button
+        onclick="markAllNotificationsRead()"
+      >
+        Mark all read
+      </button>
+    </div>
+
+    <div id="notificationList">
+      <div class="empty-notification">
+        <div>🔔</div>
+        <p>No notifications yet</p>
+      </div>
+    </div>
+
+  </div>
+
+</div></header>
+
+<!-- Sidebar -->
+
+<div class="dashboard">
+
+<div class="sidebar">
+
+<h2>🚖 Sitamarhi Cab</h2>
+
+<ul>
+
+<li class="active">
+<i class="fa-solid fa-house"></i>
+Dashboard
+</li>
+
+<li>
+<i class="fa-solid fa-car"></i>
+<a href="book.html">Book Ride</a>
+</li>
+
+<li>
+<i class="fa-solid fa-clock-rotate-left"></i>
+<a href="ride-history.html">Ride History</a>
+</li>
+
+<li>
+    <i class="fa-solid fa-wallet"></i>
+    <a href="wallet.html">Wallet</a>
+</li>
+
+<li>
+<i class="fa-solid fa-user"></i>
+<a href="profile.html">Profile</a>
+</li>
+
+<li>
+<i class="fa-solid fa-gear"></i>
+Settings
+</li>
+
+<li>
+<i class="fa-solid fa-right-from-bracket"></i>
+<a href="login.html">Logout</a>
+</li>
+
+</ul>
+
+</div>
+
+<!-- Main -->
+
+<div class="main-content">
+
+<div class="topbar">
+
+<h1>Welcome 👋</h1>
+
+<div class="user">
+
+<i class="fa-solid fa-circle-user"></i>
+
+<span>Ankit</span>
+
+</div>
+
+</div>
+
+<!-- Cards -->
+
+<div class="dashboard-cards">
+
+<div class="dash-card">
+
+<i class="fa-solid fa-car-side"></i>
+
+<h2>24</h2>
+
+<p>Total Rides</p>
+
+</div>
+
+<div class="dash-card">
+
+<i class="fa-solid fa-wallet"></i>
+
+<h2>₹0.00</h2>
+
+<p>Wallet Balance</p>
+
+</div>
+
+<div class="dash-card">
+
+<i class="fa-solid fa-star"></i>
+
+<h2>4.9</h2>
+
+<p>Rating</p>
+
+</div>
+
+</div>
+<div class="user-dashboard">
+
+    <h1>🚖 My Rides</h1>
+
+    <div id="myRideList">
+
+        <p>Loading your rides...</p>
+
+    </div>
+
+</div>
+<div class="admin-section">
+
+    <h2>📍 Live Driver Location</h2>
+
+    <div id="map"
+         style="width:100%;height:400px;border-radius:10px;">
+
+    </div>
+
+</div>
+
+
+
+
+
+<!-- Quick Buttons -->
+
+<div class="quick-actions">
+
+<a href="book.html" class="action-btn">
+
+Book New Ride
+
+</a>
+
+<a href="ride-history.html" class="action-btn">
+View History
+</a>
+<a href="profile.html" class="action-btn">
+My Profile
+</a>
+</div>
+
+</div>
+
+</div>
+
+<script type="module" src="dashboard.js"></script>
+
+</body>
+</html>

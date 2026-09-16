@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Wallet Payment | SitamarhiCab</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #f4f6f8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .payment-card {
+            width: 100%;
+            max-width: 480px;
+            background: white;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.12);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 30px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .logo span {
+            color: #f5b400;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #777;
+            margin-bottom: 25px;
+        }
+
+        .wallet-box {
+            background: #111827;
+            color: white;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .wallet-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .wallet-balance {
+            font-size: 30px;
+            font-weight: bold;
+            margin-top: 7px;
+        }
+
+        .ride-box {
+            background: #f7f7f7;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+
+        .ride-box p {
+            margin: 9px 0;
+            word-break: break-word;
+        }
+
+        .fare {
+            text-align: center;
+            font-size: 34px;
+            font-weight: bold;
+            margin: 22px 0;
+        }
+
+        .pay-btn {
+            width: 100%;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            background: #16a34a;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .pay-btn:hover {
+            background: #15803d;
+        }
+
+        .pay-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            margin-top: 12px;
+            padding: 13px;
+            border-radius: 10px;
+            background: #e5e7eb;
+            color: #111;
+            text-decoration: none;
+        }
+
+        .message {
+            margin-top: 18px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .loading {
+            display: block;
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="payment-card">
+
+        <div class="logo">
+            Sitamarhi<span>Cab</span>
+        </div>
+
+        <p class="subtitle">
+            💳 Secure Wallet Payment
+        </p>
+
+
+        <div class="wallet-box">
+
+            <div class="wallet-label">
+                Available Wallet Balance
+            </div>
+
+            <div
+                id="walletBalance"
+                class="wallet-balance"
+            >
+                ₹0.00
+            </div>
+
+        </div>
+
+
+        <div class="ride-box">
+
+            <p>
+                <strong>Ride ID:</strong>
+                <span id="rideId">
+                    Loading...
+                </span>
+            </p>
+
+            <p>
+                <strong>Vehicle:</strong>
+                <span id="vehicle">
+                    Loading...
+                </span>
+            </p>
+
+            <p>
+                <strong>Pickup:</strong>
+                <span id="pickup">
+                    Loading...
+                </span>
+            </p>
+
+            <p>
+                <strong>Drop:</strong>
+                <span id="drop">
+                    Loading...
+                </span>
+            </p>
+
+        </div>
+
+
+        <div class="fare">
+
+            ₹<span id="fare">
+                0
+            </span>
+
+        </div>
+
+
+        <button
+            id="payButton"
+            class="pay-btn"
+            disabled
+        >
+            Loading...
+        </button>
+
+
+        <a
+            href="dashboard.html"
+            class="back-btn"
+        >
+            ← Back to Dashboard
+        </a>
+
+
+        <div
+            id="message"
+            class="message"
+        ></div>
+
+    </div>
+
+
+    <script
+        type="module"
+        src="./wallet-payment.js"
+    ></script>
+
+</body>
+
+</html>

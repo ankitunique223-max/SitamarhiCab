@@ -1,0 +1,135 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Admin authority must be assigned with the Firebase Admin SDK, never from a
+    // browser-writable Firestore field.
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.keys().hasAll(['admin'])
+        && request.auth.token.admin == true;
+    }
+
+    function isApprovedDriver() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'driver'
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved';
+    }
+
+    function isRideCustomer() {
+      return signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    function isRideDriver() {
+      return signedIn() && resource.data.driverId == request.auth.uid;
+    }
+
+    function isAssignedDriver(driverId) {
+      return get(/databases/$(database)/documents/users/$(driverId)).data.role == 'driver'
+        && get(/databases/$(database)/documents/users/$(driverId)).data.status == 'approved';
+    }
+
+    function paymentStateUnchanged() {
+      return request.resource.data.paymentStatus == resource.data.paymentStatus;
+    }
+
+    match /users/{userId} {
+      allow get: if isAdmin() || (signedIn() && request.auth.uid == userId);
+      allow list: if isAdmin();
+
+      // A registration may create only a customer or a pending driver. Admin
+      // status is intentionally unavailable to all client-side code.
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role in ['user', 'driver']
+        && ((request.resource.data.role == 'user' && request.resource.data.status == 'approved')
+          || (request.resource.data.role == 'driver' && request.resource.data.status == 'pending'));
+
+      // Users may maintain their profile and online state, but cannot promote
+      // themselves, approve a driver, or change document ownership.
+      allow update: if isAdmin() || (signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status);
+      allow delete: if isAdmin();
+    }
+
+    match /rides/{rideId} {
+      allow get, list: if isAdmin() || isRideCustomer() || isRideDriver()
+        || (isApprovedDriver() && resource.data.status == 'pending' && resource.data.driverId == '');
+
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.driverId == ''
+        && request.resource.data.paymentStatus in ['pending', 'unpaid'];
+
+      // The customer can select an approved driver or cancel their non-terminal
+      // ride. Drivers can only progress the status of a ride assigned to them.
+      allow update: if isAdmin()
+        || (isRideCustomer()
+          && request.resource.data.userId == resource.data.userId
+          && (
+            (resource.data.status == 'pending'
+              && request.resource.data.status == 'assigned'
+              && resource.data.driverId == ''
+              && request.resource.data.driverId != ''
+              && isAssignedDriver(request.resource.data.driverId)
+              && paymentStateUnchanged()
+              && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['driverId', 'status', 'assignedAt', 'driverDistance', 'driverLatitude', 'driverLongitude']))
+            || (resource.data.status in ['pending', 'assigned', 'accepted']
+              && request.resource.data.status == 'cancelled'
+              && paymentStateUnchanged()
+              && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['status', 'cancelledAt', 'cancelledBy']))
+          )
+        )
+        || (isRideDriver()
+          && request.resource.data.userId == resource.data.userId
+          && request.resource.data.driverId == resource.data.driverId
+          && paymentStateUnchanged()
+          && (
+            (resource.data.status == 'assigned' && request.resource.data.status == 'accepted'
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'acceptedAt', 'acceptedBy']))
+            || (resource.data.status == 'accepted' && request.resource.data.status == 'ongoing'
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'startedAt', 'startedBy']))
+            || (resource.data.status == 'ongoing' && request.resource.data.status == 'completed'
+              && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['status', 'finalFare', 'completedAt', 'completedBy']))
+          )
+        );
+      allow delete: if isAdmin();
+    }
+
+    match /driver_locations/{driverId} {
+      allow create, update: if isApprovedDriver()
+        && request.auth.uid == driverId
+        && request.resource.data.driverId == request.auth.uid;
+      allow get: if isAdmin() || (signedIn() && request.auth.uid == driverId)
+        || (signedIn()
+          && resource.data.activeRideId is string
+          && get(/databases/$(database)/documents/rides/$(resource.data.activeRideId)).data.userId == request.auth.uid
+          && get(/databases/$(database)/documents/rides/$(resource.data.activeRideId)).data.driverId == driverId
+          && get(/databases/$(database)/documents/rides/$(resource.data.activeRideId)).data.status in ['accepted', 'ongoing']);
+      allow list, delete: if isAdmin();
+    }
+
+    // Earnings are accounting records. They must be written by a trusted server
+    // after payment/ride verification, not by a driver browser session.
+    match /earnings/{earningId} {
+      allow get, list: if isAdmin() || (signedIn() && resource.data.driverId == request.auth.uid);
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
