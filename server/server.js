@@ -170,9 +170,6 @@ app.post("/verify-payment", (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-    console.log("");
-    console.log("=================================");
-    console.log(`🚕 Server: http://127.0.0.1:${PORT}`);
-    console.log("=================================");
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`SitamarhiCab Payment Server running on port ${PORT}`);
 });
