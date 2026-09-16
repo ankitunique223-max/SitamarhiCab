@@ -164,11 +164,10 @@ function closePopup(){
 
 // Book Ride Button
 
-const bookBtn = document.querySelector('.action-btn');
+const actionBtn = document.querySelector('.action-btn');
 
-if(bookBtn){
-
-bookBtn.addEventListener("click",function(){
+if(actionBtn){
+    actionBtn.addEventListener("click",function(){
 
 window.location.href="book.html";
 
