@@ -17,7 +17,7 @@ import {
 
 const RAZORPAY_KEY_ID = "rzp_test_Ta3DcEprJki8XB";
 
-const BACKEND_URL = "http://127.0.0.1:3000";
+const BACKEND_URL = "https://sitamarhicab.onrender.com";
 
 
 // =====================================================
