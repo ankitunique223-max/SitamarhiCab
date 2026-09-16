@@ -4,3 +4,4 @@ firebase-debug.log
 service-account*.json
 firebase-admin*.json
 .env
+firestore-debug.log
