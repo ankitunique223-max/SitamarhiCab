@@ -6,32 +6,53 @@
 window.addEventListener("scroll", () => {
     const navbar = document.querySelector(".navbar");
 
-    if (window.scrollY > 30) {
-        navbar.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
-    } else {
-        navbar.style.boxShadow = "none";
+    if (navbar) {
+        if (window.scrollY > 30) {
+            navbar.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
+        } else {
+            navbar.style.boxShadow = "none";
+        }
     }
 });
 
-// Book Ride Button
+
+// ===============================
+// BOOK RIDE BUTTON
+// ===============================
+
+// Homepage Book Ride button
 const bookBtn = document.querySelector(".book-btn");
 
 if (bookBtn) {
     bookBtn.addEventListener("click", function (e) {
         e.preventDefault();
-        alert("Welcome to Sitamarhi Cab!\nBooking feature will be available soon.");
+        window.location.href = "book.html";
     });
 }
 
-// Find Ride Button
+
+// ===============================
+// FIND RIDE BUTTON
+// ===============================
+
 const findRideBtn = document.querySelector(".booking-card button");
 
 if (findRideBtn) {
     findRideBtn.addEventListener("click", function () {
 
-        const pickup = document.querySelector('input[placeholder="Pickup Location"]').value;
-        const drop = document.querySelector('input[placeholder="Drop Location"]').value;
-        const vehicle = document.querySelector("select").value;
+        const pickupInput = document.querySelector(
+            'input[placeholder="Pickup Location"]'
+        );
+
+        const dropInput = document.querySelector(
+            'input[placeholder="Drop Location"]'
+        );
+
+        const vehicleSelect = document.querySelector("select");
+
+        const pickup = pickupInput ? pickupInput.value.trim() : "";
+        const drop = dropInput ? dropInput.value.trim() : "";
+        const vehicle = vehicleSelect ? vehicleSelect.value : "";
 
         if (pickup === "" || drop === "") {
             alert("Please enter Pickup and Drop location.");
@@ -44,16 +65,27 @@ if (findRideBtn) {
     });
 }
 
-// Current Year in Footer (optional)
+
+// ===============================
+// CURRENT YEAR IN FOOTER
+// ===============================
+
 const footer = document.querySelector("footer p");
+
 if (footer) {
-    footer.innerHTML = `© ${new Date().getFullYear()} Sitamarhi Cab | All Rights Reserved`;
+    footer.innerHTML =
+        `© ${new Date().getFullYear()} Sitamarhi Cab | All Rights Reserved`;
 }
-    // Feature Card Animation
+
+
+// ===============================
+// FEATURE CARD ANIMATION
+// ===============================
 
 const featureBoxes = document.querySelectorAll(".feature-box");
 
 featureBoxes.forEach(box => {
+
     box.addEventListener("mouseenter", () => {
         box.style.background = "#FFD700";
     });
@@ -61,44 +93,75 @@ featureBoxes.forEach(box => {
     box.addEventListener("mouseleave", () => {
         box.style.background = "#ffffff";
     });
+
 });
+
+
+// ===============================
+// RIDE BUTTONS
+// ===============================
+
 const rideButtons = document.querySelectorAll(".ride-btn");
 
 rideButtons.forEach(button => {
+
     button.addEventListener("click", () => {
-        alert("Ride booking page will open soon.");
+        window.location.href = "book.html";
     });
+
 });
+
+
+// ===============================
+// DOWNLOAD APP BUTTON
+// ===============================
+
 const downloadBtn = document.querySelector(".download-app button");
 
 if (downloadBtn) {
+
     downloadBtn.addEventListener("click", () => {
         alert("Android & iOS app is coming soon!");
     });
+
 }
 
+
 // ==============================
-// SITAMARHI CAB - BOOKING SCRIPT
+// BOOKING PAGE SCRIPT
 // ==============================
 
 // Prevent selecting a past date
 const dateInput = document.getElementById("date");
 
 if (dateInput) {
-    const today = new Date().toISOString().split("T")[0];
+
+    const today = new Date()
+        .toISOString()
+        .split("T")[0];
+
     dateInput.min = today;
 }
 
 
 // ==============================
-// Fare Calculator
+// FARE CALCULATOR
 // ==============================
 
 function calculateFare() {
 
-    const vehicle = document.getElementById("vehicle").value;
-    const pickup = document.getElementById("pickup").value.trim();
-    const drop = document.getElementById("drop").value.trim();
+    const vehicleElement = document.getElementById("vehicle");
+    const pickupElement = document.getElementById("pickup");
+    const dropElement = document.getElementById("drop");
+    const fareElement = document.getElementById("fare");
+
+    if (!vehicleElement || !pickupElement || !dropElement || !fareElement) {
+        return;
+    }
+
+    const vehicle = vehicleElement.value;
+    const pickup = pickupElement.value.trim();
+    const drop = dropElement.value.trim();
 
     if (pickup === "" || drop === "") {
         alert("Please enter Pickup and Drop locations.");
@@ -110,7 +173,7 @@ function calculateFare() {
 
     let rate = 0;
 
-    switch(vehicle){
+    switch (vehicle) {
 
         case "Bike":
             rate = 10;
@@ -134,43 +197,52 @@ function calculateFare() {
 
         default:
             rate = 20;
-
     }
 
     const fare = distance * rate;
 
-    document.getElementById("fare").innerHTML =
-        "₹" + fare + "<br><small>" + distance + " km</small>";
-
+    fareElement.innerHTML =
+        "₹" + fare +
+        "<br><small>" +
+        distance +
+        " km</small>";
 }
 
 
-
-
-
 // ==============================
-// Close Popup
+// CLOSE POPUP
 // ==============================
 
-function closePopup(){
+function closePopup() {
 
-    document.getElementById("popup").style.display="none";
+    const popup = document.getElementById("popup");
 
-    bookingForm.reset();
+    if (popup) {
+        popup.style.display = "none";
+    }
 
-    document.getElementById("fare").innerHTML="₹0";
+    if (typeof bookingForm !== "undefined" && bookingForm) {
+        bookingForm.reset();
+    }
 
+    const fareElement = document.getElementById("fare");
+
+    if (fareElement) {
+        fareElement.innerHTML = "₹0";
+    }
 }
 
-// Book Ride Button
 
-const actionBtn = document.querySelector('.action-btn');
+// ==============================
+// ACTION BUTTON
+// ==============================
 
-if(actionBtn){
-    actionBtn.addEventListener("click",function(){
+const actionBtn = document.querySelector(".action-btn");
 
-window.location.href="book.html";
+if (actionBtn) {
 
-});
+    actionBtn.addEventListener("click", function () {
+        window.location.href = "book.html";
+    });
 
 }
