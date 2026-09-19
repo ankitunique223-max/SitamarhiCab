@@ -130,6 +130,10 @@ onAuthStateChanged(auth, async (user) => {
 // LOAD RIDE
 // =====================================================
 
+// =====================================================
+// LOAD RIDE
+// =====================================================
+
 async function loadRide(user) {
 
     try {
@@ -138,8 +142,11 @@ async function loadRide(user) {
 
         const rideRef = doc(db, "rides", rideId);
 
-        const rideSnap = await getDoc(rideRef);
+        console.log("========== PAYMENT FIRESTORE CHECK ==========");
+        console.log("Logged-in User UID:", user.uid);
+        console.log("Ride ID:", rideId);
 
+        const rideSnap = await getDoc(rideRef);
 
         if (!rideSnap.exists()) {
 
@@ -149,10 +156,26 @@ async function loadRide(user) {
 
         }
 
-
+        // IMPORTANT:
+        // Ride data must be initialized BEFORE using ride.userId etc.
         const ride = rideSnap.data();
 
         console.log("Ride data:", ride);
+
+        console.log("Ride User ID:", ride.userId);
+        console.log("Ride Driver ID:", ride.driverId);
+
+        console.log(
+            "User role:",
+            ride.userId === user.uid
+                ? "CUSTOMER"
+                : "NOT CUSTOMER"
+        );
+
+        console.log("Payment:", ride.payment);
+        console.log("Payment Status:", ride.paymentStatus);
+
+        console.log("============================================");
 
 
         // -------------------------------------------------
@@ -161,7 +184,9 @@ async function loadRide(user) {
 
         if (ride.userId !== user.uid) {
 
-            showError("You are not authorized to pay for this ride.");
+            showError(
+                "You are not authorized to pay for this ride."
+            );
 
             return;
 
@@ -174,7 +199,8 @@ async function loadRide(user) {
 
         rideIdElement.textContent = rideId;
 
-        vehicleElement.textContent = ride.vehicle || "Cab";
+        vehicleElement.textContent =
+            ride.vehicle || "Cab";
 
 
         const fare = Number(ride.fare || 0);
@@ -198,9 +224,12 @@ async function loadRide(user) {
 
         if (ride.paymentStatus === "paid") {
 
-            showSuccess("Payment already completed.");
+            showSuccess(
+                "Payment already completed."
+            );
 
-            payButton.textContent = "Payment Completed";
+            payButton.textContent =
+                "Payment Completed";
 
             payButton.disabled = true;
 
@@ -213,7 +242,8 @@ async function loadRide(user) {
         // PAYMENT BUTTON
         // -------------------------------------------------
 
-        payButton.textContent = `Pay ₹${fare}`;
+        payButton.textContent =
+            `Pay ₹${fare}`;
 
         payButton.disabled = false;
 
@@ -225,24 +255,30 @@ async function loadRide(user) {
         };
 
 
-        showMessage("Ready for secure test payment.");
+        showMessage(
+            "Ready for secure test payment."
+        );
 
         messageElement.className = "message";
 
 
     } catch (error) {
 
-        console.error("LOAD RIDE ERROR:", error);
+        console.error(
+            "LOAD RIDE ERROR:",
+            error
+        );
 
         showError(
-            error?.message || "Failed to load ride."
+            error?.message ||
+            "Failed to load ride."
         );
 
     }
 
 }
 
-
+      
 // =====================================================
 // START PAYMENT
 // =====================================================

@@ -3,12 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SitamarhiCab</title>
+    <meta name="description" content="SitamarhiCab - Book affordable and reliable Bike, Auto and Car rides in Sitamarhi.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://sitamarhicab.onrender.com/">
+    <title>SitamarhiCab - Cab Booking Service in Sitamarhi</title>
+
+    <!-- Google/SEO structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "SitamarhiCab",
+      "alternateName": "Sitamarhi Cab",
+      "url": "https://sitamarhicab.onrender.com/"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "SitamarhiCab",
+      "alternateName": "Sitamarhi Cab",
+      "url": "https://sitamarhicab.onrender.com/"
+    }
+    </script>
 
     <link rel="stylesheet" href="style.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Responsive safety for phone, tablet and PC */
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .menu {
+                width: 100%;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+                padding: 0;
+                margin: 0;
+            }
+
+            .hero {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero-left,
+            .hero-right {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .hero-right img {
+                max-width: 90%;
+                margin: 0 auto;
+            }
+
+            .cards,
+            .features,
+            .vehicle-container,
+            .testimonial-container {
+                flex-wrap: wrap;
+            }
+
+            .card,
+            .feature-box,
+            .vehicle-card,
+            .testimonial-card {
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .logo {
+                width: 100%;
+                text-align: center;
+            }
+
+            .login-btn {
+                display: inline-block;
+            }
+
+            h1 {
+                font-size: clamp(28px, 8vw, 40px);
+            }
+
+            h2 {
+                font-size: clamp(22px, 7vw, 30px);
+            }
+
+            .hero {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .vehicle-card,
+            .testimonial-card,
+            .feature-box,
+            .card {
+                width: 100%;
+            }
+        }
+    </style>
+
 </head>
 <body>
 

@@ -1,100 +1,354 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SitamarhiCab - Live Tracking</title>
 
-<title>Track Ride | SitamarhiCab</title>
+    <!-- Leaflet -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
 
-<link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-<link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-/>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #111827;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 18px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h2 {
+            margin: 0;
+        }
+
+        .back-btn {
+            background: #2563eb;
+            color: white;
+            border: 0;
+            padding: 10px 16px;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 1100px;
+            margin: 25px auto;
+        }
+
+        .status-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.08);
+        }
+
+        .status-card h1 {
+            margin-top: 0;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 20px;
+            background: #e5e7eb;
+            font-weight: bold;
+        }
+
+        .status.assigned {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status.accepted {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status.ongoing {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status.completed {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .status.cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .detail {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .detail b {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        #liveMap {
+            width: 100%;
+            height: 450px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .driver-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.08);
+            margin-bottom: 20px;
+        }
+
+        .driver-card h2 {
+            margin-top: 0;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .actions button {
+            border: 0;
+            padding: 11px 17px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .call-btn {
+            background: #16a34a;
+            color: white;
+        }
+
+        .cancel-btn {
+            background: #dc2626;
+            color: white;
+        }
+
+        .dashboard-btn {
+            background: #2563eb;
+            color: white;
+        }
+
+        .message {
+            background: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.08);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 700px) {
+
+            .details {
+                grid-template-columns: 1fr;
+            }
+
+            #liveMap {
+                height: 350px;
+            }
+
+            header {
+                padding: 15px;
+            }
+
+            .container {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
 
 <body>
 
-<div class="tracking-page">
+<header>
 
-<div class="map-area">
+    <h2>🚕 SitamarhiCab</h2>
 
-    <div id="map"></div>
+    <button
+        class="back-btn"
+        id="backBtn"
+    >
+        Dashboard
+    </button>
+
+</header>
+
+
+<div class="container">
+
+    <div
+        id="messageBox"
+        class="message"
+    >
+        Loading ride...
+    </div>
+
+
+    <div
+        id="trackingContent"
+        class="hidden"
+    >
+
+        <div class="status-card">
+
+            <h1>📍 Live Ride Tracking</h1>
+
+            <span
+                id="rideStatus"
+                class="status"
+            >
+                Loading...
+            </span>
+
+
+            <div class="details">
+
+                <div class="detail">
+                    <b>📍 Pickup</b>
+                    <span id="pickup">-</span>
+                </div>
+
+                <div class="detail">
+                    <b>🏁 Drop</b>
+                    <span id="drop">-</span>
+                </div>
+
+                <div class="detail">
+                    <b>💰 Fare</b>
+                    <span id="fare">₹0</span>
+                </div>
+
+                <div class="detail">
+                    <b>📏 Driver Distance</b>
+                    <span id="distance">Waiting for GPS...</span>
+                </div>
+
+                <div class="detail">
+                    <b>⏱ ETA</b>
+                    <span id="eta">Calculating...</span>
+                </div>
+
+                <div class="detail">
+                    <b>💳 Payment</b>
+                    <span id="payment">-</span>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="driverCard"
+            class="driver-card hidden"
+        >
+
+            <h2>👨‍✈️ Driver</h2>
+
+            <p>
+                <b>Name:</b>
+                <span id="driverName">-</span>
+            </p>
+
+            <p>
+                <b>Phone:</b>
+                <span id="driverPhone">-</span>
+            </p>
+
+            <p>
+                <b>Vehicle:</b>
+                <span id="driverVehicle">-</span>
+            </p>
+
+            <div class="actions">
+
+                <button
+                    id="callBtn"
+                    class="call-btn"
+                >
+                    📞 Call Driver
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div id="liveMap"></div>
+
+
+        <div class="actions">
+
+            <button
+                id="cancelBtn"
+                class="cancel-btn"
+            >
+                Cancel Ride
+            </button>
+
+            <button
+                id="dashboardBtn"
+                class="dashboard-btn"
+            >
+                Go to Dashboard
+            </button>
+
+        </div>
+
+    </div>
 
 </div>
 
-<div class="tracking-panel">
-
-<h1>Live Ride Tracking</h1>
-
-<h2>Driver Arriving...</h2>
-
-<div class="driver-info">
-
-<img
-src="https://randomuser.me/api/portraits/men/45.jpg">
-
-<div>
-
-<h3>Ravi Kumar</h3>
-
-<p>⭐ 4.9 Rating</p>
-
-<p>Swift Dzire</p>
-
-<p>BR30AB1234</p>
-
-</div>
-
-</div>
-
-<div class="ride-details">
-
-<p><strong>Pickup:</strong> Sitamarhi Bus Stand</p>
-
-<p><strong>Drop:</strong> Janaki Mandir</p>
-
-<p><strong>ETA:</strong> <span id="eta">4 Minutes</span></p>
-
-<p><strong>Status:</strong> <span id="rideStatus">Driver is Coming</span></p>
-
-</div>
-
-<div class="tracking-buttons">
-
-<button onclick="callDriver()">
-📞 Call
-</button>
-
-<button onclick="chatDriver()">
-💬 Chat
-</button>
-
-<button onclick="cancelRide()">
-❌ Cancel
-</button>
-
-<button id="paymentBtn">
-💳 Proceed to Payment
-</button>
-
-</div>
-
-</div>
-
-</div>
 
 <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-</script>
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+></script>
 
 <script
     type="module"
-    src="tracking.js">
-</script>
+    src="./tracking.js"
+></script>
 
 </body>
-
 </html>

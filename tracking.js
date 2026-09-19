@@ -1,77 +1,126 @@
-// ==========================================
-// SITAMARHI CAB
-// REAL LIVE RIDE TRACKING
-// ==========================================
-
-import { auth, db } from "./firebase.js";
+import {
+    auth,
+    db
+} from "./firebase.js";
 
 import {
     doc,
     getDoc,
-    onSnapshot
+    onSnapshot,
+    updateDoc,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 
-// ==========================================
-// ELEMENTS
-// ==========================================
+// ======================================================
+// GLOBAL
+// ======================================================
 
-const eta =
-    document.getElementById("eta");
+let currentUser = null;
+let currentRide = null;
+
+let rideListener = null;
+let driverLocationListener = null;
+
+let map = null;
+let driverMarker = null;
+let pickupMarker = null;
+
+let currentRideId = null;
+
+
+// ======================================================
+// ELEMENTS
+// ======================================================
+
+const messageBox =
+    document.getElementById("messageBox");
+
+const trackingContent =
+    document.getElementById("trackingContent");
 
 const rideStatus =
     document.getElementById("rideStatus");
 
-const cab =
-    document.getElementById("cab");
+const pickupElement =
+    document.getElementById("pickup");
+
+const dropElement =
+    document.getElementById("drop");
+
+const fareElement =
+    document.getElementById("fare");
+
+const distanceElement =
+    document.getElementById("distance");
+
+const etaElement =
+    document.getElementById("eta");
+
+const paymentElement =
+    document.getElementById("payment");
+
+const driverCard =
+    document.getElementById("driverCard");
+
+const driverNameElement =
+    document.getElementById("driverName");
+
+const driverPhoneElement =
+    document.getElementById("driverPhone");
+
+const driverVehicleElement =
+    document.getElementById("driverVehicle");
 
 
-// ==========================================
-// RIDE ID
-// ==========================================
+// ======================================================
+// GET RIDE ID
+// ======================================================
 
 const params =
     new URLSearchParams(
         window.location.search
     );
 
-const rideId =
+currentRideId =
     params.get("rideId");
 
 
-let locationListener =
-    null;
+// ======================================================
+// AUTH
+// ======================================================
 
-let rideListener =
-    null;
+auth.onAuthStateChanged(
+    async function(user) {
 
+        if (!user) {
 
-// ==========================================
-// CHECK RIDE ID
-// ==========================================
+            window.location.href =
+                "login.html";
 
-if (!rideId) {
+            return;
+        }
 
-    if (rideStatus) {
+        currentUser = user;
 
-        rideStatus.innerHTML =
-            "❌ Ride ID missing.";
+        if (!currentRideId) {
+
+            showMessage(
+                "❌ Ride ID missing."
+            );
+
+            return;
+        }
+
+        await loadRide();
+
     }
-
-} else {
-
-    console.log(
-        "🚖 Tracking Ride:",
-        rideId
-    );
-
-    loadRide();
-}
+);
 
 
-// ==========================================
+// ======================================================
 // LOAD RIDE
-// ==========================================
+// ======================================================
 
 async function loadRide() {
 
@@ -81,21 +130,18 @@ async function loadRide() {
             doc(
                 db,
                 "rides",
-                rideId
+                currentRideId
             );
 
-
-        const rideSnapshot =
+        const rideSnap =
             await getDoc(
                 rideRef
             );
 
 
-        if (
-            !rideSnapshot.exists()
-        ) {
+        if (!rideSnap.exists()) {
 
-            showError(
+            showMessage(
                 "❌ Ride not found."
             );
 
@@ -104,53 +150,34 @@ async function loadRide() {
 
 
         const ride =
-            rideSnapshot.data();
-
-
-        console.log(
-            "Ride:",
-            ride
-        );
+            rideSnap.data();
 
 
         if (
-            !ride.driverId
+            ride.userId !==
+            currentUser.uid
         ) {
 
-            showError(
-                "❌ Driver not assigned."
+            showMessage(
+                "❌ You are not allowed to track this ride."
             );
 
             return;
         }
 
 
-        // ==================================
-        // LISTEN TO RIDE STATUS
-        // ==================================
+        currentRide = {
+            id: currentRideId,
+            ...ride
+        };
 
-        listenToRide(
-            rideId
+
+        renderRide(
+            currentRide
         );
 
 
-        // ==================================
-        // LISTEN TO DRIVER GPS
-        // ==================================
-
-        listenToDriverLocation(
-            ride.driverId
-        );
-
-
-        // ==================================
-        // UPDATE BASIC INFO
-        // ==================================
-
-        updateRideInfo(
-            ride
-        );
-
+        startRideListener();
 
     } catch (error) {
 
@@ -159,140 +186,277 @@ async function loadRide() {
             error
         );
 
-
-        showError(
+        showMessage(
             "❌ Unable to load ride."
         );
+
     }
+
 }
 
 
-// ==========================================
-// RIDE STATUS LISTENER
-// ==========================================
+// ======================================================
+// REALTIME RIDE LISTENER
+// ======================================================
 
-function listenToRide(
-    rideId
-) {
+function startRideListener() {
+
+    if (rideListener) {
+
+        rideListener();
+
+        rideListener = null;
+    }
+
 
     const rideRef =
         doc(
             db,
             "rides",
-            rideId
+            currentRideId
         );
 
 
     rideListener =
         onSnapshot(
-
             rideRef,
 
-            function (snapshot) {
+            function(snapshot) {
 
-                if (
-                    !snapshot.exists()
-                ) {
+                if (!snapshot.exists()) {
 
-                    showError(
-                        "❌ Ride not found."
+                    showMessage(
+                        "❌ Ride no longer exists."
                     );
 
                     return;
                 }
 
 
-                const ride =
-                    snapshot.data();
+                currentRide = {
+                    id: snapshot.id,
+                    ...snapshot.data()
+                };
 
 
-                console.log(
-                    "Ride status:",
-                    ride.status
+                renderRide(
+                    currentRide
                 );
 
 
-                updateRideInfo(
-                    ride
+                handleRideStatus(
+                    currentRide
                 );
-
-
-                // ==================================
-                // COMPLETED
-                // ==================================
-
-                if (
-                    ride.status ===
-                    "completed"
-                ) {
-
-                    if (rideStatus) {
-
-                        rideStatus.innerHTML =
-                            "🏁 Ride Completed";
-                    }
-
-
-                    if (eta) {
-
-                        eta.innerHTML =
-                            "Completed";
-                    }
-
-
-                    setTimeout(
-                        function () {
-
-                            window.location.href =
-                                "ride-complete.html";
-
-                        },
-                        1500
-                    );
-                }
-
-
-                // ==================================
-                // CANCELLED
-                // ==================================
-
-                if (
-                    ride.status ===
-                    "cancelled"
-                ) {
-
-                    if (rideStatus) {
-
-                        rideStatus.innerHTML =
-                            "❌ Ride Cancelled";
-                    }
-                }
 
             },
 
-            function (error) {
+            function(error) {
 
                 console.error(
                     "Ride listener error:",
                     error
                 );
+
+                showMessage(
+                    "❌ Unable to monitor ride."
+                );
+
             }
         );
+
 }
 
 
-// ==========================================
-// DRIVER LOCATION LISTENER
-// ==========================================
+// ======================================================
+// RENDER RIDE
+// ======================================================
 
-function listenToDriverLocation(
+function renderRide(ride) {
+
+    messageBox.classList.add(
+        "hidden"
+    );
+
+    trackingContent.classList.remove(
+        "hidden"
+    );
+
+
+    pickupElement.textContent =
+        ride.pickup || "-";
+
+    dropElement.textContent =
+        ride.drop || "-";
+
+
+    const fare =
+        Number(
+            ride.finalFare ??
+            ride.fare ??
+            0
+        );
+
+    fareElement.textContent =
+        "₹" + fare;
+
+
+    paymentElement.textContent =
+        ride.payment || "-";
+
+
+    const status =
+        ride.status || "pending";
+
+
+    rideStatus.textContent =
+        formatStatus(status);
+
+
+    rideStatus.className =
+        "status " + status;
+
+
+    if (
+        ride.driverId &&
+        ride.driverId !== ""
+    ) {
+
+        loadDriver(
+            ride.driverId
+        );
+
+    } else {
+
+        driverCard.classList.add(
+            "hidden"
+        );
+
+        stopDriverLocationListener();
+
+        distanceElement.textContent =
+            "Driver not assigned";
+
+        etaElement.textContent =
+            "-";
+    }
+
+}
+
+
+// ======================================================
+// DRIVER DETAILS
+// ======================================================
+
+async function loadDriver(
     driverId
 ) {
 
-    console.log(
-        "📍 Tracking driver:",
-        driverId
-    );
+    try {
+
+        const driverSnap =
+            await getDoc(
+                doc(
+                    db,
+                    "users",
+                    driverId
+                )
+            );
+
+
+        if (
+            !driverSnap.exists()
+        ) {
+
+            return;
+        }
+
+
+        const driver =
+            driverSnap.data();
+
+
+        driverCard.classList.remove(
+            "hidden"
+        );
+
+
+        driverNameElement.textContent =
+            driver.name ||
+            driver.displayName ||
+            "Driver";
+
+
+        driverPhoneElement.textContent =
+            driver.phone ||
+            driver.mobile ||
+            "Unavailable";
+
+
+        driverVehicleElement.textContent =
+            driver.vehicle ||
+            driver.vehicleNumber ||
+            "Cab";
+
+
+        const phone =
+            driver.phone ||
+            driver.mobile ||
+            "";
+
+
+        const callBtn =
+            document.getElementById(
+                "callBtn"
+            );
+
+
+        if (callBtn) {
+
+            callBtn.onclick =
+                function() {
+
+                    if (!phone) {
+
+                        alert(
+                            "Driver phone number unavailable."
+                        );
+
+                        return;
+                    }
+
+                    window.location.href =
+                        "tel:" + phone;
+
+                };
+
+        }
+
+
+        startDriverLocationListener(
+            driverId
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Driver load error:",
+            error
+        );
+
+    }
+
+}
+
+
+// ======================================================
+// DRIVER GPS LISTENER
+// ======================================================
+
+function startDriverLocationListener(
+    driverId
+) {
+
+    stopDriverLocationListener();
 
 
     const locationRef =
@@ -303,47 +467,42 @@ function listenToDriverLocation(
         );
 
 
-    locationListener =
+    driverLocationListener =
         onSnapshot(
-
             locationRef,
 
-            function (snapshot) {
+            function(snapshot) {
 
-                if (
-                    !snapshot.exists()
-                ) {
+                if (!snapshot.exists()) {
 
-                    console.log(
-                        "No driver location yet."
-                    );
+                    distanceElement.textContent =
+                        "Waiting for driver GPS...";
 
+                    etaElement.textContent =
+                        "Waiting...";
 
                     return;
                 }
 
 
-                const location =
+                const data =
                     snapshot.data();
 
 
                 const latitude =
                     Number(
-                        location.latitude
+                        data.latitude
                     );
-
 
                 const longitude =
                     Number(
-                        location.longitude
+                        data.longitude
                     );
 
 
                 if (
-                    !Number.isFinite(
-                        latitude
-                    ) ||
-                    !Number.isFinite(
+                    !validCoordinate(
+                        latitude,
                         longitude
                     )
                 ) {
@@ -352,343 +511,669 @@ function listenToDriverLocation(
                 }
 
 
-                console.log(
-                    "📍 Driver moved:",
+                updateDriverMarker(
                     latitude,
                     longitude
                 );
 
 
-                moveCab(
+                updateDistanceAndETA(
                     latitude,
                     longitude
                 );
+
             },
 
-            function (error) {
+            function(error) {
 
                 console.error(
-                    "Location listener error:",
+                    "Driver location error:",
                     error
                 );
+
+                distanceElement.textContent =
+                    "Location unavailable";
+
             }
         );
+
 }
 
 
-// ==========================================
-// UPDATE RIDE INFO
-// ==========================================
+// ======================================================
+// STOP GPS LISTENER
+// ======================================================
 
-function updateRideInfo(
-    ride
-) {
-
-    if (rideStatus) {
-
-        switch (
-            ride.status
-        ) {
-
-            case "assigned":
-
-                rideStatus.innerHTML =
-                    "👨‍✈️ Driver Assigned";
-
-                break;
-
-
-            case "accepted":
-
-                rideStatus.innerHTML =
-                    "✅ Driver Accepted";
-
-                break;
-
-
-            case "ongoing":
-
-                rideStatus.innerHTML =
-                    "🚗 Ride Started";
-
-                break;
-
-
-            case "completed":
-
-                rideStatus.innerHTML =
-                    "🏁 Ride Completed";
-
-                break;
-
-
-            default:
-
-                rideStatus.innerHTML =
-                    "🔎 Searching Driver";
-        }
-    }
-
-
-    // ==================================
-    // ETA
-    // ==================================
+function stopDriverLocationListener() {
 
     if (
-        ride.status ===
-        "ongoing"
+        driverLocationListener
     ) {
 
-        if (eta) {
+        driverLocationListener();
 
-            eta.innerHTML =
-                "Ride in progress";
-        }
-
-    } else if (
-        ride.status ===
-        "accepted"
-    ) {
-
-        if (eta) {
-
-            eta.innerHTML =
-                "Driver is arriving";
-        }
+        driverLocationListener =
+            null;
     }
+
 }
 
 
-// ==========================================
-// MOVE CAB
-// ==========================================
+// ======================================================
+// MAP
+// ======================================================
 
-function moveCab(
+function initializeMap(
     latitude,
     longitude
 ) {
 
-    if (!cab) {
+    if (map) {
 
         return;
     }
 
 
-    /*
-        Temporary visual map position.
+    if (
+        typeof L ===
+        "undefined"
+    ) {
 
-        Later we will replace this
-        with Google Maps / Leaflet.
-    */
+        console.error(
+            "Leaflet not loaded."
+        );
 
-
-    const latPercent =
-        ((latitude - 20) / 10) *
-        100;
-
-
-    const lngPercent =
-        ((longitude - 80) / 10) *
-        100;
+        return;
+    }
 
 
-    const left =
-        Math.max(
-            5,
-            Math.min(
-                95,
-                lngPercent
-            )
+    map =
+        L.map(
+            "liveMap"
+        ).setView(
+            [
+                latitude,
+                longitude
+            ],
+            14
         );
 
 
-    const top =
-        Math.max(
-            5,
-            Math.min(
-                95,
-                100 - latPercent
-            )
-        );
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            maxZoom: 19,
+            attribution:
+                "&copy; OpenStreetMap contributors"
+        }
+    ).addTo(map);
 
-
-    cab.style.left =
-        left + "%";
-
-
-    cab.style.top =
-        top + "%";
-
-
-    cab.style.transition =
-        "all 1.5s ease";
-
-
-    console.log(
-        "🚖 Cab position:",
-        left + "%",
-        top + "%"
-    );
 }
 
 
-// ==========================================
-// ERROR
-// ==========================================
+// ======================================================
+// DRIVER MARKER
+// ======================================================
 
-function showError(
+function updateDriverMarker(
+    latitude,
+    longitude
+) {
+
+    initializeMap(
+        latitude,
+        longitude
+    );
+
+
+    if (!map) {
+
+        return;
+    }
+
+
+    const position = [
+        latitude,
+        longitude
+    ];
+
+
+    if (!driverMarker) {
+
+        const icon =
+            L.divIcon({
+                className:
+                    "driver-marker",
+                html:
+                    "🚕",
+                iconSize:
+                    [40, 40],
+                iconAnchor:
+                    [20, 20]
+            });
+
+
+        driverMarker =
+            L.marker(
+                position,
+                {
+                    icon: icon
+                }
+            )
+            .addTo(map)
+            .bindPopup(
+                "🚕 Driver"
+            );
+
+    } else {
+
+        driverMarker.setLatLng(
+            position
+        );
+
+    }
+
+
+    map.setView(
+        position,
+        15
+    );
+
+}
+
+
+// ======================================================
+// PICKUP MARKER
+// ======================================================
+
+function addPickupMarker() {
+
+    if (!map) {
+        return;
+    }
+
+
+    const lat =
+        Number(
+            currentRide?.pickupLatitude
+        );
+
+    const lng =
+        Number(
+            currentRide?.pickupLongitude
+        );
+
+
+    if (
+        !validCoordinate(
+            lat,
+            lng
+        )
+    ) {
+
+        return;
+    }
+
+
+    if (pickupMarker) {
+
+        pickupMarker.setLatLng([
+            lat,
+            lng
+        ]);
+
+        return;
+    }
+
+
+    pickupMarker =
+        L.marker([
+            lat,
+            lng
+        ])
+        .addTo(map)
+        .bindPopup(
+            "📍 Pickup Location"
+        );
+
+}
+
+
+// ======================================================
+// DISTANCE + ETA
+// ======================================================
+
+function updateDistanceAndETA(
+    driverLat,
+    driverLng
+) {
+
+    if (!currentRide) {
+        return;
+    }
+
+
+    const pickupLat =
+        Number(
+            currentRide.pickupLatitude
+        );
+
+    const pickupLng =
+        Number(
+            currentRide.pickupLongitude
+        );
+
+
+    if (
+        !validCoordinate(
+            pickupLat,
+            pickupLng
+        )
+    ) {
+
+        distanceElement.textContent =
+            "GPS available";
+
+        etaElement.textContent =
+            "Calculating...";
+
+        return;
+    }
+
+
+    addPickupMarker();
+
+
+    const distance =
+        calculateDistance(
+            driverLat,
+            driverLng,
+            pickupLat,
+            pickupLng
+        );
+
+
+    distanceElement.textContent =
+        distance.toFixed(2) +
+        " km";
+
+
+    if (
+        distance < 0.15
+    ) {
+
+        etaElement.textContent =
+            "Arriving";
+
+        return;
+    }
+
+
+    const averageSpeed =
+        25;
+
+
+    let eta =
+        Math.ceil(
+            (
+                distance /
+                averageSpeed
+            ) * 60
+        );
+
+
+    if (eta < 1) {
+        eta = 1;
+    }
+
+
+    etaElement.textContent =
+        eta + " min";
+
+}
+
+
+// ======================================================
+// HAVERSINE DISTANCE
+// ======================================================
+
+function calculateDistance(
+    lat1,
+    lon1,
+    lat2,
+    lon2
+) {
+
+    const R =
+        6371;
+
+
+    const dLat =
+        toRadians(
+            lat2 - lat1
+        );
+
+    const dLon =
+        toRadians(
+            lon2 - lon1
+        );
+
+
+    const a =
+        Math.sin(
+            dLat / 2
+        ) ** 2
+        +
+        Math.cos(
+            toRadians(lat1)
+        )
+        *
+        Math.cos(
+            toRadians(lat2)
+        )
+        *
+        Math.sin(
+            dLon / 2
+        ) ** 2;
+
+
+    const c =
+        2 *
+        Math.atan2(
+            Math.sqrt(a),
+            Math.sqrt(1 - a)
+        );
+
+
+    return R * c;
+
+}
+
+
+function toRadians(
+    value
+) {
+
+    return (
+        value *
+        Math.PI /
+        180
+    );
+
+}
+
+
+// ======================================================
+// STATUS HANDLER
+// ======================================================
+
+function handleRideStatus(
+    ride
+) {
+
+    if (
+        ride.status ===
+        "completed"
+    ) {
+
+        stopDriverLocationListener();
+
+        etaElement.textContent =
+            "Ride Completed";
+
+        return;
+    }
+
+
+    if (
+        ride.status ===
+        "cancelled"
+    ) {
+
+        stopDriverLocationListener();
+
+        etaElement.textContent =
+            "Ride Cancelled";
+
+        return;
+    }
+
+
+    if (
+        ride.status ===
+        "accepted" ||
+        ride.status ===
+        "ongoing"
+    ) {
+
+        if (
+            ride.driverId
+        ) {
+
+            startDriverLocationListener(
+                ride.driverId
+            );
+
+        }
+
+    }
+
+}
+
+
+// ======================================================
+// CANCEL RIDE
+// ======================================================
+
+document
+    .getElementById("cancelBtn")
+    ?.addEventListener(
+        "click",
+        async function() {
+
+            if (!currentRide) {
+                return;
+            }
+
+
+            if (
+                ![
+                    "pending",
+                    "assigned",
+                    "accepted"
+                ].includes(
+                    currentRide.status
+                )
+            ) {
+
+                alert(
+                    "This ride cannot be cancelled now."
+                );
+
+                return;
+            }
+
+
+            const confirmed =
+                confirm(
+                    "Are you sure you want to cancel this ride?"
+                );
+
+
+            if (!confirmed) {
+                return;
+            }
+
+
+            try {
+
+                await updateDoc(
+                    doc(
+                        db,
+                        "rides",
+                        currentRideId
+                    ),
+                    {
+                        status:
+                            "cancelled",
+
+                        cancelledAt:
+                            serverTimestamp(),
+
+                        cancelledBy:
+                            currentUser.uid
+                    }
+                );
+
+
+                alert(
+                    "Ride cancelled successfully."
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Cancel ride error:",
+                    error
+                );
+
+                alert(
+                    "Unable to cancel ride.\n\n" +
+                    error.message
+                );
+
+            }
+
+        }
+    );
+
+
+// ======================================================
+// DASHBOARD BUTTONS
+// ======================================================
+
+document
+    .getElementById("backBtn")
+    ?.addEventListener(
+        "click",
+        function() {
+
+            window.location.href =
+                "dashboard.html";
+
+        }
+    );
+
+
+document
+    .getElementById("dashboardBtn")
+    ?.addEventListener(
+        "click",
+        function() {
+
+            window.location.href =
+                "dashboard.html";
+
+        }
+    );
+
+
+// ======================================================
+// HELPERS
+// ======================================================
+
+function validCoordinate(
+    latitude,
+    longitude
+) {
+
+    return (
+        Number.isFinite(latitude) &&
+        Number.isFinite(longitude) &&
+        latitude >= -90 &&
+        latitude <= 90 &&
+        longitude >= -180 &&
+        longitude <= 180
+    );
+
+}
+
+
+function formatStatus(
+    status
+) {
+
+    const labels = {
+
+        pending:
+            "⏳ Finding Driver",
+
+        assigned:
+            "🚕 Driver Assigned",
+
+        accepted:
+            "✅ Driver Accepted",
+
+        ongoing:
+            "🚗 Ride In Progress",
+
+        completed:
+            "🏁 Ride Completed",
+
+        cancelled:
+            "❌ Ride Cancelled"
+
+    };
+
+
+    return (
+        labels[status] ||
+        status
+    );
+
+}
+
+
+function showMessage(
     message
 ) {
 
-    if (rideStatus) {
+    messageBox.classList.remove(
+        "hidden"
+    );
 
-        rideStatus.innerHTML =
-            message;
-    }
+    messageBox.innerHTML =
+        message;
 
+    trackingContent.classList.add(
+        "hidden"
+    );
 
-    if (eta) {
-
-        eta.innerHTML =
-            "-";
-    }
 }
 
 
-// ==========================================
-// CANCEL RIDE
-// ==========================================
-
-window.cancelRide =
-    async function () {
-
-        const confirmCancel =
-            confirm(
-                "Cancel this ride?"
-            );
-
-
-        if (!confirmCancel) {
-
-            return;
-        }
-
-
-        try {
-
-            await import(
-                "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js"
-            ).then(
-                async ({
-                    updateDoc
-                }) => {
-
-                    await updateDoc(
-
-                        doc(
-                            db,
-                            "rides",
-                            rideId
-                        ),
-
-                        {
-                            status:
-                                "cancelled"
-                        }
-                    );
-                }
-            );
-
-
-            alert(
-                "❌ Ride cancelled."
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                error
-            );
-
-
-            alert(
-                "Unable to cancel ride."
-            );
-        }
-    };
-
-
-// ==========================================
-// CALL DRIVER
-// ==========================================
-
-window.callDriver =
-    function () {
-
-        alert(
-            "📞 Calling Driver..."
-        );
-    };
-
-
-// ==========================================
-// CHAT DRIVER
-// ==========================================
-
-window.chatDriver =
-    function () {
-
-        alert(
-            "💬 Chat feature coming soon."
-        );
-    };
-
-
-// ==========================================
-// PAYMENT
-// ==========================================
-
-const paymentBtn =
-    document.getElementById(
-        "paymentBtn"
-    );
-
-
-if (paymentBtn) {
-
-    paymentBtn.addEventListener(
-        "click",
-        function () {
-
-            window.location.href =
-                "payment.html";
-        }
-    );
-}
-
-
-// ==========================================
+// ======================================================
 // CLEANUP
-// ==========================================
+// ======================================================
 
 window.addEventListener(
     "beforeunload",
-    function () {
+    function() {
 
-        if (
-            locationListener
-        ) {
-
-            locationListener();
-        }
-
-
-        if (
-            rideListener
-        ) {
-
+        if (rideListener) {
             rideListener();
         }
+
+        if (
+            driverLocationListener
+        ) {
+            driverLocationListener();
+        }
+
     }
+);
+
+
+console.log(
+    "🚕 SitamarhiCab Live Tracking loaded."
 );

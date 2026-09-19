@@ -1,225 +1,55 @@
-// ==========================================================
-// SITAMARHI CAB - DRIVER DASHBOARD
-// COMPLETE DRIVER + RIDE MANAGEMENT + LIVE GPS
-// ==========================================================
-
 import { auth, db } from "./firebase.js";
+
+import {
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 import {
     collection,
     query,
     where,
-    getDocs,
-    getDoc,
-    doc,
-    updateDoc,
-    setDoc,
-    addDoc,
     onSnapshot,
-    serverTimestamp,
-    deleteField,
-    runTransaction
+    doc,
+    getDoc,
+    updateDoc
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 
-// ==========================================================
-// GLOBAL VARIABLES
-// ==========================================================
+const driverName =
+    document.getElementById("driverName");
 
-let currentDriver = null;
+const ridesContainer =
+    document.getElementById("ridesContainer");
 
-let gpsWatchId = null;
-
-let ridesListener = null;
-
-let driverInitialized = false;
-
-let gpsPermissionDenied = false;
-// ==========================================================
-// NOTIFICATION HELPER
-// ==========================================================
-
-async function createNotification(
-    notificationId,
-    userId,
-    title,
-    message,
-    type,
-    rideId
-) {
-    if (!notificationId || !userId) {
-        return;
-    }
-
-    try {
-        await setDoc(
-            doc(
-                db,
-                "notifications",
-                notificationId
-            ),
-            {
-                userId: userId,
-                title: title,
-                message: message,
-                type: type,
-                rideId: rideId || "",
-                read: false,
-                createdAt: serverTimestamp()
-            },
-            {
-                merge: true
-            }
-        );
-
-        console.log(
-            "🔔 Notification sent:",
-            notificationId
-        );
-
-    } catch (error) {
-        console.error(
-            "❌ Notification error:",
-            error
-        );
-    }
-}
-
-// ==========================================================
-// DOM ELEMENTS
-// ==========================================================
-
-const onlineSwitch =
-    document.getElementById("onlineSwitch");
-
-const rideList =
-    document.getElementById("rideList");
+const refreshBtn =
+    document.getElementById("refreshBtn");
 
 const logoutBtn =
-    document.getElementById("driverLogout");
+    document.getElementById("logoutBtn");
 
-const earningsCard =
-    document.getElementById("todayEarnings");
-
-const tripsCard =
-    document.getElementById("todayTrips");
+const message =
+    document.getElementById("message");
 
 
-// ==========================================================
-// AUTH CHECK
-// ==========================================================
+let currentUser = null;
 
-auth.onAuthStateChanged(async (user) => {
+let driverData = {};
 
-    if (!user) {
+let rides = [];
 
-        stopGPS();
-
-        window.location.href =
-            "login.html";
-
-        return;
-    }
+let unsubscribeRides = null;
 
 
-    currentDriver = user;
+/* =====================================
+   AUTH
+===================================== */
 
+onAuthStateChanged(
+    auth,
+    async (user) => {
 
-    console.log(
-        "👨‍✈️ Driver logged in:",
-        user.uid
-    );
-
-
-    if (driverInitialized) {
-        return;
-    }
-
-
-    driverInitialized = true;
-
-
-    try {
-
-        await verifyDriverAccount();
-
-        await loadDriverOnlineStatus();
-
-        startLiveTracking();
-
-        loadDriverRides();
-
-        updateDriverStats();
-
-    } catch (error) {
-
-        console.error(
-            "Driver initialization error:",
-            error
-        );
-
-    }
-
-});
-
-
-// ==========================================================
-// VERIFY DRIVER ACCOUNT
-// ==========================================================
-
-async function verifyDriverAccount() {
-
-    if (!currentDriver) {
-        return;
-    }
-
-
-    try {
-
-        const driverRef =
-            doc(
-                db,
-                "users",
-                currentDriver.uid
-            );
-
-
-        const snapshot =
-            await getDoc(
-                driverRef
-            );
-
-
-        if (!snapshot.exists()) {
-
-            console.warn(
-                "Driver profile not found."
-            );
-
-            return;
-        }
-
-
-        const driver =
-            snapshot.data();
-
-
-        console.log(
-            "Driver profile:",
-            driver
-        );
-
-
-        if (
-            driver.role &&
-            driver.role !== "driver"
-        ) {
-
-            alert(
-                "This account is not registered as a driver."
-            );
-
-            await auth.signOut();
+        if (!user) {
 
             window.location.href =
                 "login.html";
@@ -228,53 +58,26 @@ async function verifyDriverAccount() {
         }
 
 
-        if (
-            driver.status &&
-            driver.status !== "approved"
-        ) {
-
-            if (onlineSwitch) {
-
-                onlineSwitch.checked =
-                    false;
-
-                onlineSwitch.disabled =
-                    true;
-
-            }
+        currentUser = user;
 
 
-            alert(
-                "Your driver account is not approved yet."
-            );
-
-        }
-
-    } catch (error) {
-
-        console.error(
-            "Driver verification error:",
-            error
+        console.log(
+            "DRIVER UID:",
+            user.uid
         );
 
+
+        await loadDriver();
+
     }
+);
 
-}
 
+/* =====================================
+   LOAD DRIVER
+===================================== */
 
-// ==========================================================
-// LOAD ONLINE STATUS
-// ==========================================================
-
-async function loadDriverOnlineStatus() {
-
-    if (
-        !currentDriver ||
-        !onlineSwitch
-    ) {
-        return;
-    }
-
+async function loadDriver() {
 
     try {
 
@@ -282,1389 +85,101 @@ async function loadDriverOnlineStatus() {
             doc(
                 db,
                 "users",
-                currentDriver.uid
+                currentUser.uid
             );
 
 
-        const snapshot =
+        const driverSnapshot =
             await getDoc(
                 driverRef
             );
 
 
-        if (!snapshot.exists()) {
+        if (
+            !driverSnapshot.exists()
+        ) {
+
+            ridesContainer.innerHTML = `
+                <div class="empty">
+                    Driver profile not found.
+                </div>
+            `;
+
             return;
         }
 
 
-        const driver =
-            snapshot.data();
+        driverData =
+            driverSnapshot.data();
 
 
-        onlineSwitch.checked =
-            driver.online === true;
+        console.log(
+            "DRIVER DATA:",
+            driverData
+        );
 
-    } catch (error) {
+
+        if (
+            driverData.role !==
+            "driver"
+        ) {
+
+            ridesContainer.innerHTML = `
+                <div class="empty">
+                    This account is not a driver account.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        if (
+            driverData.status !==
+            "approved"
+        ) {
+
+            ridesContainer.innerHTML = `
+                <div class="empty">
+
+                    <h3>
+                        Driver Approval Pending
+                    </h3>
+
+                    <p style="margin-top:10px;">
+                        Admin approval ke baad
+                        rides yahan show hongi.
+                    </p>
+
+                </div>
+            `;
+
+            return;
+        }
+
+
+        driverName.textContent =
+            driverData.name ||
+            driverData.displayName ||
+            currentUser.email ||
+            "Driver";
+
+
+        listenToAssignedRides();
+
+    }
+
+    catch (error) {
 
         console.error(
-            "Online status load error:",
+            "DRIVER LOAD ERROR:",
             error
         );
 
-    }
 
-}
-
-
-// ==========================================================
-// ONLINE / OFFLINE SWITCH
-// ==========================================================
-
-if (onlineSwitch) {
-
-    onlineSwitch.addEventListener(
-        "change",
-        async function () {
-
-            if (!currentDriver) {
-
-                onlineSwitch.checked =
-                    false;
-
-                return;
-            }
-
-
-            const goingOnline =
-                onlineSwitch.checked;
-
-
-            try {
-
-                // ==========================================
-                // ONLINE
-                // ==========================================
-
-                if (goingOnline) {
-
-                    const driverRef =
-                        doc(
-                            db,
-                            "users",
-                            currentDriver.uid
-                        );
-
-
-                    const driverSnapshot =
-                        await getDoc(
-                            driverRef
-                        );
-
-
-                    if (
-                        driverSnapshot.exists()
-                    ) {
-
-                        const driver =
-                            driverSnapshot.data();
-
-
-                        if (
-                            driver.status &&
-                            driver.status !==
-                            "approved"
-                        ) {
-
-                            onlineSwitch.checked =
-                                false;
-
-
-                            alert(
-                                "❌ Your driver account is not approved."
-                            );
-
-
-                            return;
-
-                        }
-
-                    }
-
-
-                    await setDoc(
-                        driverRef,
-                        {
-
-                            online:
-                                true,
-
-                            updatedAt:
-                                serverTimestamp()
-
-                        },
-                        {
-                            merge:
-                                true
-                        }
-                    );
-
-
-                    startLiveTracking();
-
-
-                    alert(
-                        "🟢 Driver is Online"
-                    );
-
-                }
-
-
-                // ==========================================
-                // OFFLINE
-                // ==========================================
-
-                else {
-
-                    await setDoc(
-                        doc(
-                            db,
-                            "users",
-                            currentDriver.uid
-                        ),
-                        {
-
-                            online:
-                                false,
-
-                            updatedAt:
-                                serverTimestamp()
-
-                        },
-                        {
-                            merge:
-                                true
-                        }
-                    );
-
-
-                    alert(
-                        "🔴 Driver is Offline"
-                    );
-
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "Online status error:",
-                    error
-                );
-
-
-                onlineSwitch.checked =
-                    !goingOnline;
-
-
-                alert(
-                    "Unable to update online status.\n\n" +
-                    error.message
-                );
-
-            }
-
-        }
-    );
-
-}
-
-
-// ==========================================================
-// LOAD DRIVER RIDES
-// ==========================================================
-
-function loadDriverRides() {
-
-    if (!rideList) {
-
-        console.warn(
-            "rideList element not found."
-        );
-
-        return;
-    }
-
-
-    if (ridesListener) {
-
-        ridesListener();
-
-        ridesListener =
-            null;
-
-    }
-
-
-    const ridesQuery =
-        query(
-            collection(
-                db,
-                "rides"
-            ),
-            where(
-                "driverId",
-                "==",
-                currentDriver.uid
-            )
-        );
-
-
-    ridesListener =
-        onSnapshot(
-
-            ridesQuery,
-
-            function (snapshot) {
-
-                rideList.innerHTML =
-                    "";
-
-
-                if (snapshot.empty) {
-
-                    rideList.innerHTML =
-                        "<p>No assigned rides.</p>";
-
-                    return;
-                }
-
-
-                let visibleRides =
-                    0;
-
-
-                snapshot.forEach(
-                    function (rideDoc) {
-
-                        const ride =
-                            rideDoc.data();
-
-
-                        const rideId =
-                            rideDoc.id;
-
-
-                        // ==================================
-                        // ASSIGNED
-                        // ==================================
-
-                        if (
-                            ride.status ===
-                            "assigned"
-                        ) {
-
-                            visibleRides++;
-
-
-                            rideList.innerHTML +=
-                                createAssignedRideCard(
-                                    ride,
-                                    rideId
-                                );
-
-                        }
-
-
-                        // ==================================
-                        // ACCEPTED
-                        // ==================================
-
-                        else if (
-                            ride.status ===
-                            "accepted"
-                        ) {
-
-                            visibleRides++;
-
-
-                            rideList.innerHTML +=
-                                createAcceptedRideCard(
-                                    ride,
-                                    rideId
-                                );
-
-                        }
-
-
-                        // ==================================
-                        // ONGOING
-                        // ==================================
-
-                        else if (
-                            ride.status ===
-                            "ongoing"
-                        ) {
-
-                            visibleRides++;
-
-
-                            rideList.innerHTML +=
-                                createOngoingRideCard(
-                                    ride,
-                                    rideId
-                                );
-
-                        }
-
-
-                        // ==================================
-                        // COMPLETED
-                        // ==================================
-
-                        else if (
-                            ride.status ===
-                            "completed"
-                        ) {
-
-                            visibleRides++;
-
-
-                            rideList.innerHTML +=
-                                createCompletedRideCard(
-                                    ride,
-                                    rideId
-                                );
-
-                        }
-
-
-                        // ==================================
-                        // CANCELLED
-                        // ==================================
-
-                        else if (
-                            ride.status ===
-                            "cancelled"
-                        ) {
-
-                            visibleRides++;
-
-
-                            rideList.innerHTML +=
-                                createCancelledRideCard(
-                                    ride,
-                                    rideId
-                                );
-
-                        }
-
-                    }
-                );
-
-
-                if (
-                    visibleRides ===
-                    0
-                ) {
-
-                    rideList.innerHTML =
-                        "<p>No active rides.</p>";
-
-                }
-
-            },
-
-            function (error) {
-
-                console.error(
-                    "Ride listener error:",
-                    error
-                );
-
-
-                rideList.innerHTML =
-                    "<p>Unable to load rides.</p>";
-
-            }
-
-        );
-
-}
-
-
-// ==========================================================
-// ASSIGNED RIDE CARD
-// ==========================================================
-
-function createAssignedRideCard(
-    ride,
-    rideId
-) {
-
-    return `
-
-        <div class="ride-card">
-
-            <h3>
-                🚖 New Assigned Ride
-            </h3>
-
-            <p>
-                <b>Pickup:</b>
-                ${escapeHTML(ride.pickup || "-")}
-            </p>
-
-            <p>
-                <b>Drop:</b>
-                ${escapeHTML(ride.drop || "-")}
-            </p>
-
-            <p>
-                <b>Phone:</b>
-                ${escapeHTML(ride.phone || "-")}
-            </p>
-
-            <p>
-                <b>Vehicle:</b>
-                ${escapeHTML(ride.vehicle || "-")}
-            </p>
-
-            <p>
-                <b>Fare:</b>
-                ₹${Number(ride.fare) || 0}
-            </p>
-
-            <p>
-                <b>Payment:</b>
-                ${escapeHTML(ride.payment || "-")}
-            </p>
-
-            <p>
-                <b>Status:</b>
-                ⏳ Assigned
-            </p>
-
-            <button
-                class="accept-btn"
-                onclick="acceptRide('${rideId}')"
-            >
-                ✅ Accept Ride
-            </button>
-
-        </div>
-
-    `;
-
-}
-
-
-// ==========================================================
-// ACCEPTED RIDE CARD
-// ==========================================================
-
-function createAcceptedRideCard(
-    ride,
-    rideId
-) {
-
-    return `
-
-        <div class="ride-card">
-
-            <h3>
-                ✅ Ride Accepted
-            </h3>
-
-            <p>
-                <b>Pickup:</b>
-                ${escapeHTML(ride.pickup || "-")}
-            </p>
-
-            <p>
-                <b>Drop:</b>
-                ${escapeHTML(ride.drop || "-")}
-            </p>
-
-            <p>
-                <b>Phone:</b>
-                ${escapeHTML(ride.phone || "-")}
-            </p>
-
-            <p>
-                <b>Vehicle:</b>
-                ${escapeHTML(ride.vehicle || "-")}
-            </p>
-
-            <p>
-                <b>Fare:</b>
-                ₹${Number(ride.fare) || 0}
-            </p>
-
-            <p>
-                <b>Payment:</b>
-                ${escapeHTML(ride.payment || "-")}
-            </p>
-
-            <p>
-                <b>Status:</b>
-                ✅ Accepted
-            </p>
-
-            <button
-                class="accept-btn"
-                onclick="startRide('${rideId}')"
-            >
-                🚗 Start Ride
-            </button>
-
-        </div>
-
-    `;
-
-}
-
-
-// ==========================================================
-// ONGOING RIDE CARD
-// ==========================================================
-
-function createOngoingRideCard(
-    ride,
-    rideId
-) {
-
-    return `
-
-        <div class="ride-card">
-
-            <h3>
-                🚗 Ride In Progress
-            </h3>
-
-            <p>
-                <b>Pickup:</b>
-                ${escapeHTML(ride.pickup || "-")}
-            </p>
-
-            <p>
-                <b>Drop:</b>
-                ${escapeHTML(ride.drop || "-")}
-            </p>
-
-            <p>
-                <b>Phone:</b>
-                ${escapeHTML(ride.phone || "-")}
-            </p>
-
-            <p>
-                <b>Fare:</b>
-                ₹${Number(ride.fare) || 0}
-            </p>
-
-            <p>
-                <b>Payment:</b>
-                ${escapeHTML(ride.payment || "-")}
-            </p>
-
-            <p>
-                <b>Status:</b>
-                🚗 Ongoing
-            </p>
-
-            <button
-                class="complete-btn"
-                onclick="completeRide('${rideId}')"
-            >
-                🏁 Complete Ride
-            </button>
-
-        </div>
-
-    `;
-
-}
-
-
-// ==========================================================
-// COMPLETED RIDE CARD
-// ==========================================================
-
-function createCompletedRideCard(
-    ride,
-    rideId
-) {
-
-    const finalFare =
-        Number(
-            ride.finalFare
-        ) ||
-        Number(
-            ride.fare
-        ) ||
-        0;
-
-
-    return `
-
-        <div class="ride-card completed">
-
-            <h3>
-                ✅ Completed Ride
-            </h3>
-
-            <p>
-                <b>Pickup:</b>
-                ${escapeHTML(ride.pickup || "-")}
-            </p>
-
-            <p>
-                <b>Drop:</b>
-                ${escapeHTML(ride.drop || "-")}
-            </p>
-
-            <p>
-                <b>Fare:</b>
-                ₹${finalFare}
-            </p>
-
-            <p>
-                <b>Payment:</b>
-                ${escapeHTML(ride.payment || "-")}
-            </p>
-
-            <p>
-                <b>Payment Status:</b>
-                ${escapeHTML(
-                    ride.paymentStatus || "pending"
-                )}
-            </p>
-
-            <p>
-                <b>Status:</b>
-                🏁 Completed
-            </p>
-
-        </div>
-
-    `;
-
-}
-
-
-// ==========================================================
-// CANCELLED RIDE CARD
-// ==========================================================
-
-function createCancelledRideCard(
-    ride,
-    rideId
-) {
-
-    return `
-
-        <div class="ride-card">
-
-            <h3>
-                ❌ Cancelled Ride
-            </h3>
-
-            <p>
-                <b>Pickup:</b>
-                ${escapeHTML(ride.pickup || "-")}
-            </p>
-
-            <p>
-                <b>Drop:</b>
-                ${escapeHTML(ride.drop || "-")}
-            </p>
-
-            <p>
-                <b>Fare:</b>
-                ₹${Number(ride.fare) || 0}
-            </p>
-
-            <p>
-                <b>Status:</b>
-                ❌ Cancelled
-            </p>
-
-        </div>
-
-    `;
-
-}
-
-
-// ==========================================================
-// ACCEPT RIDE
-// ==========================================================
-
-window.acceptRide =
-    async function (rideId) {
-
-        if (!currentDriver) {
-
-            alert(
-                "Driver is not logged in."
-            );
-
-            return;
-        }
-
-
-        try {
-
-            const rideRef =
-                doc(
-                    db,
-                    "rides",
-                    rideId
-                );
-
-
-            await runTransaction(
-                db,
-                async function(transaction) {
-
-                    const rideSnapshot =
-                        await transaction.get(
-                            rideRef
-                        );
-
-
-                    if (
-                        !rideSnapshot.exists()
-                    ) {
-
-                        throw new Error(
-                            "Ride not found."
-                        );
-
-                    }
-
-
-                    const ride =
-                        rideSnapshot.data();
-
-
-                    if (
-                        ride.driverId !==
-                        currentDriver.uid
-                    ) {
-
-                        throw new Error(
-                            "This ride is not assigned to you."
-                        );
-
-                    }
-
-
-                    if (
-                        ride.status !==
-                        "assigned"
-                    ) {
-
-                        throw new Error(
-                            "Ride is no longer available."
-                        );
-
-                    }
-
-
-                    transaction.update(
-                        rideRef,
-                        {
-
-                            status:
-                                "accepted",
-
-                            acceptedAt:
-                                serverTimestamp(),
-
-                            acceptedBy:
-                                currentDriver.uid
-
-                        }
-                    );
-
-                }
-            );
-            // ==========================================================
-// CUSTOMER NOTIFICATION - DRIVER ACCEPTED
-// ==========================================================
-
-const acceptedRideSnapshot =
-    await getDoc(rideRef);
-
-if (acceptedRideSnapshot.exists()) {
-
-    const acceptedRide =
-        acceptedRideSnapshot.data();
-
-    if (acceptedRide.userId) {
-
-        await createNotification(
-            `${rideId}_customer_driver_accepted`,
-            acceptedRide.userId,
-            "Driver Accepted ✅",
-            "Your driver has accepted the ride.",
-            "driver_accepted",
-            rideId
-        );
-
-    }
-}
-
-
-            alert(
-                "✅ Ride Accepted!"
-            );
-
-
-            updateDriverStats();
-
-
-        } catch (error) {
-
-            console.error(
-                "Accept ride error:",
-                error
-            );
-
-
-            alert(
-                "Unable to accept ride.\n\n" +
-                error.message
-            );
-
-        }
-
-    };
-
-
-// ==========================================================
-// START RIDE
-// ==========================================================
-
-window.startRide =
-    async function (rideId) {
-
-        if (!currentDriver) {
-
-            alert(
-                "Driver is not logged in."
-            );
-
-            return;
-        }
-
-
-        try {
-
-            const rideRef =
-                doc(
-                    db,
-                    "rides",
-                    rideId
-                );
-
-
-            const rideSnapshot =
-                await getDoc(
-                    rideRef
-                );
-
-
-            if (
-                !rideSnapshot.exists()
-            ) {
-
-                alert(
-                    "❌ Ride not found."
-                );
-
-                return;
-            }
-
-
-            const ride =
-                rideSnapshot.data();
-
-
-            if (
-                ride.driverId !==
-                currentDriver.uid
-            ) {
-
-                alert(
-                    "❌ This ride is not assigned to you."
-                );
-
-                return;
-            }
-
-
-            if (
-                ride.status !==
-                "accepted"
-            ) {
-
-                alert(
-                    "❌ Ride must be accepted first."
-                );
-
-                return;
-            }
-
-
-            await updateDoc(
-                rideRef,
-                {
-
-                    status:
-                        "ongoing",
-
-                    startedAt:
-                        serverTimestamp(),
-
-                    startedBy:
-                        currentDriver.uid
-
-                }
-            );
-            // ==========================================================
-// CUSTOMER NOTIFICATION - RIDE STARTED
-// ==========================================================
-
-await createNotification(
-    `${rideId}_customer_ride_started`,
-    ride.userId,
-    "Ride Started 🚗",
-    "Your ride has started. Your driver is on the way.",
-    "ride_started",
-    rideId
-);
-
-
-            // Make sure driver stays online
-            await setDoc(
-                doc(
-                    db,
-                    "users",
-                    currentDriver.uid
-                ),
-                {
-
-                    online:
-                        true,
-
-                    updatedAt:
-                        serverTimestamp()
-
-                },
-                {
-                    merge:
-                        true
-                }
-            );
-
-            // Bind location sharing to this assigned ride. Firestore rules use
-            // this field to expose live location only to this ride's customer.
-            await setDoc(
-                doc(
-                    db,
-                    "driver_locations",
-                    currentDriver.uid
-                ),
-                {
-                    driverId: currentDriver.uid,
-                    activeRideId: rideId,
-                    updatedAt: serverTimestamp()
-                },
-                {
-                    merge: true
-                }
-            );
-
-
-            startLiveTracking();
-
-
-            alert(
-                "🚗 Ride Started!"
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "Start ride error:",
-                error
-            );
-
-
-            alert(
-                "Unable to start ride.\n\n" +
-                error.message
-            );
-
-        }
-
-    };
-
-
-// ==========================================================
-// COMPLETE RIDE
-// ==========================================================
-
-window.completeRide =
-    async function (rideId) {
-
-        if (!currentDriver) {
-
-            alert(
-                "❌ Driver is not logged in."
-            );
-
-            return;
-        }
-
-
-        const confirmed =
-            confirm(
-                "🏁 Complete this ride?"
-            );
-
-
-        if (!confirmed) {
-            return;
-        }
-
-
-        try {
-
-            const rideRef =
-                doc(
-                    db,
-                    "rides",
-                    rideId
-                );
-
-
-            const rideSnapshot =
-                await getDoc(
-                    rideRef
-                );
-
-
-            if (
-                !rideSnapshot.exists()
-            ) {
-
-                alert(
-                    "❌ Ride not found."
-                );
-
-                return;
-            }
-
-
-            const ride =
-                rideSnapshot.data();
-
-
-            if (
-                ride.driverId !==
-                currentDriver.uid
-            ) {
-
-                alert(
-                    "❌ This ride is not assigned to you."
-                );
-
-                return;
-            }
-
-
-            if (
-                ride.status !==
-                "ongoing"
-            ) {
-
-                alert(
-                    "❌ Ride cannot be completed.\n\nCurrent status: " +
-                    ride.status
-                );
-
-                return;
-            }
-
-
-            const amount =
-                Number(
-                    ride.fare
-                ) || 0;
-
-
-            const paymentMethod =
-                ride.payment ||
-                "Cash";
-
-
-            await updateDoc(
-                rideRef,
-                {
-
-                    status:
-                        "completed",
-
-                    finalFare:
-                        amount,
-
-                    payment:
-                        paymentMethod,
-
-                    paymentStatus:
-                        ride.paymentStatus ||
-                        "pending",
-
-                    completedAt:
-                        serverTimestamp(),
-
-                    completedBy:
-                        currentDriver.uid
-
-                }
-            );
-            // ==========================================================
-// CUSTOMER NOTIFICATION - RIDE COMPLETED
-// ==========================================================
-
-await createNotification(
-    `${rideId}_customer_ride_completed`,
-    ride.userId,
-    "Ride Completed 🏁",
-    "Your ride has been completed successfully.",
-    "ride_completed",
-    rideId
-);
-
-            // The customer must no longer be able to subscribe to location
-            // after the ride has ended.
-            await setDoc(
-                doc(
-                    db,
-                    "driver_locations",
-                    currentDriver.uid
-                ),
-                {
-                    activeRideId: deleteField(),
-                    updatedAt: serverTimestamp()
-                },
-                {
-                    merge: true
-                }
-            );
-
-
-            // ==========================================
-            // SAVE EARNING
-            // ==========================================
-
-            try {
-
-                await addDoc(
-                    collection(
-                        db,
-                        "earnings"
-                    ),
-                    {
-
-                        driverId:
-                            currentDriver.uid,
-
-                        rideId:
-                            rideId,
-
-                        amount:
-                            amount,
-
-                        paymentMethod:
-                            paymentMethod,
-
-                        createdAt:
-                            serverTimestamp()
-
-                    }
-                );
-
-            } catch (earningError) {
-
-                console.warn(
-                    "⚠️ Earnings record error:",
-                    earningError
-                );
-
-            }
-
-
-            // ==========================================
-            // STOP GPS
-            // ==========================================
-
-            stopGPS();
-
-
-            // ==========================================
-            // DRIVER OFFLINE
-            // ==========================================
-
-            await setDoc(
-                doc(
-                    db,
-                    "users",
-                    currentDriver.uid
-                ),
-                {
-
-                    online:
-                        false,
-
-                    updatedAt:
-                        serverTimestamp()
-
-                },
-                {
-                    merge:
-                        true
-                }
-            );
-
-
-            if (onlineSwitch) {
-
-                onlineSwitch.checked =
-                    false;
-
-            }
-
-
-            alert(
-                "🎉 Ride Completed Successfully!"
-            );
-
-
-            updateDriverStats();
-
-
-        } catch (error) {
-
-            console.error(
-                "Complete ride error:",
-                error
-            );
-
-
-            alert(
-                "Unable to complete ride.\n\n" +
-                error.message
-            );
-
-        }
-
-    };
-
-
-// ==========================================================
-// DRIVER STATS
-// ==========================================================
-
-async function updateDriverStats() {
-
-    if (!currentDriver) {
-        return;
-    }
-
-
-    try {
-
-        const ridesQuery =
-            query(
-                collection(
-                    db,
-                    "rides"
-                ),
-                where(
-                    "driverId",
-                    "==",
-                    currentDriver.uid
-                ),
-                where(
-                    "status",
-                    "==",
-                    "completed"
-                )
-            );
-
-
-        const snapshot =
-            await getDocs(
-                ridesQuery
-            );
-
-
-        let trips =
-            0;
-
-
-        let earnings =
-            0;
-
-
-        snapshot.forEach(
-            function (rideDoc) {
-
-                const ride =
-                    rideDoc.data();
-
-
-                trips++;
-
-
-                earnings +=
-                    Number(
-                        ride.finalFare
-                    ) ||
-                    Number(
-                        ride.fare
-                    ) ||
-                    0;
-
-            }
-        );
-
-
-        if (earningsCard) {
-
-            earningsCard.innerText =
-                "₹" +
-                earnings;
-
-        }
-
-
-        if (tripsCard) {
-
-            tripsCard.innerText =
-                trips;
-
-        }
-
-
-    } catch (error) {
-
-        console.error(
-            "Stats error:",
-            error
+        showMessage(
+            error.message,
+            "error"
         );
 
     }
@@ -1672,196 +187,104 @@ async function updateDriverStats() {
 }
 
 
-// ==========================================================
-// LIVE GPS TRACKING
-// ==========================================================
+/* =====================================
+   REAL-TIME RIDES
+===================================== */
 
-function startLiveTracking() {
+function listenToAssignedRides() {
 
-    if (!currentDriver) {
+    if (unsubscribeRides) {
 
-        return;
-
-    }
-
-
-    if (
-        !navigator.geolocation
-    ) {
-
-        console.error(
-            "Geolocation is not supported."
-        );
-
-        return;
-
-    }
-
-
-    if (
-        gpsWatchId !== null
-    ) {
-
-        return;
+        unsubscribeRides();
 
     }
 
 
     console.log(
-        "📍 Starting live GPS..."
+        "Listening for driver UID:",
+        currentUser.uid
     );
 
 
-    gpsWatchId =
-        navigator.geolocation.watchPosition(
-
-            async function(position) {
-
-                if (!currentDriver) {
-                    return;
-                }
+    const ridesCollection =
+        collection(
+            db,
+            "rides"
+        );
 
 
-                const latitude =
-                    Number(
-                        position.coords.latitude
-                    );
+    const ridesQuery =
+        query(
+            ridesCollection,
+
+            where(
+                "driverId",
+                "==",
+                currentUser.uid
+            )
+        );
 
 
-                const longitude =
-                    Number(
-                        position.coords.longitude
-                    );
+    unsubscribeRides =
+        onSnapshot(
+
+            ridesQuery,
+
+            (snapshot) => {
+
+                console.log(
+                    "RIDES FOUND:",
+                    snapshot.size
+                );
 
 
-                if (
-                    !validCoordinate(
-                        latitude,
-                        longitude
-                    )
-                ) {
-
-                    return;
-
-                }
+                rides = [];
 
 
-                const accuracy =
-                    Number(
-                        position.coords.accuracy
-                    ) || null;
+                snapshot.forEach(
+                    (item) => {
+
+                        rides.push({
+
+                            id:
+                                item.id,
+
+                            ...item.data()
+
+                        });
+
+                    }
+                );
 
 
-                try {
-
-                    await setDoc(
-                        doc(
-                            db,
-                            "driver_locations",
-                            currentDriver.uid
-                        ),
-                        {
-
-                            driverId:
-                                currentDriver.uid,
-
-                            latitude:
-                                latitude,
-
-                            longitude:
-                                longitude,
-
-                            accuracy:
-                                accuracy,
-
-                            updatedAt:
-                                serverTimestamp()
-
-                        },
-                        {
-                            merge:
-                                true
-                        }
-                    );
-
-
-                    console.log(
-                        "📍 GPS:",
-                        latitude,
-                        longitude
-                    );
-
-
-                } catch (error) {
-
-                    console.error(
-                        "GPS Firebase error:",
-                        error
-                    );
-
-                }
+                renderRides();
 
             },
 
 
-            function(error) {
+            (error) => {
 
                 console.error(
-                    "GPS error:",
+                    "RIDE LISTENER ERROR:",
                     error
                 );
 
 
-                if (
-                    error.code ===
-                    1
-                ) {
+                ridesContainer.innerHTML = `
+                    <div class="empty">
 
-                    gpsPermissionDenied =
-                        true;
+                        <h3>
+                            ❌ Rides load nahi ho rahi
+                        </h3>
 
+                        <p style="margin-top:10px;">
+                            ${escapeHTML(
+                                error.message
+                            )}
+                        </p>
 
-                    alert(
-                        "📍 Location permission is required for live driver tracking."
-                    );
-
-                }
-
-                else if (
-                    error.code ===
-                    2
-                ) {
-
-                    console.warn(
-                        "Location unavailable."
-                    );
-
-                }
-
-                else if (
-                    error.code ===
-                    3
-                ) {
-
-                    console.warn(
-                        "Location request timed out."
-                    );
-
-                }
-
-            },
-
-
-            {
-
-                enableHighAccuracy:
-                    true,
-
-                maximumAge:
-                    3000,
-
-                timeout:
-                    15000
+                    </div>
+                `;
 
             }
 
@@ -1870,206 +293,391 @@ function startLiveTracking() {
 }
 
 
-// ==========================================================
-// STOP GPS
-// ==========================================================
+/* =====================================
+   RENDER RIDES
+===================================== */
 
-function stopGPS() {
+function renderRides() {
 
     if (
-        gpsWatchId !== null &&
-        navigator.geolocation
+        !rides.length
     ) {
 
-        navigator.geolocation.clearWatch(
-            gpsWatchId
-        );
+        ridesContainer.innerHTML = `
+            <div class="empty">
 
+                <h3>
+                    🚕 No Assigned Rides
+                </h3>
 
-        gpsWatchId =
-            null;
+                <p style="margin-top:10px;">
+                    Admin se ride assign hone ke
+                    baad yahan automatically aayegi.
+                </p>
 
+            </div>
+        `;
 
-        console.log(
-            "📍 GPS tracking stopped."
-        );
-
+        return;
     }
 
+
+    ridesContainer.innerHTML =
+        rides.map(
+            (ride) => {
+
+                const status =
+                    String(
+                        ride.status ||
+                        "pending"
+                    ).toLowerCase();
+
+
+                let action = "";
+
+
+                /* =========================
+                   ASSIGNED
+                ========================= */
+
+                if (
+                    status ===
+                    "assigned"
+                ) {
+
+                    action = `
+
+                        <button
+                            type="button"
+
+                            class="accept-btn"
+
+                            data-action="accept"
+
+                            data-ride-id="${escapeAttribute(
+                                ride.id
+                            )}"
+                        >
+                            ✅ Accept Ride
+                        </button>
+
+                    `;
+
+                }
+
+
+                /* =========================
+                   ACCEPTED
+                ========================= */
+
+                else if (
+                    status ===
+                    "accepted"
+                ) {
+
+                    action = `
+
+                        <button
+                            type="button"
+
+                            class="start-btn"
+
+                            data-action="start"
+
+                            data-ride-id="${escapeAttribute(
+                                ride.id
+                            )}"
+                        >
+                            ▶️ Start Ride
+                        </button>
+
+                    `;
+
+                }
+
+
+                /* =========================
+                   ONGOING
+                ========================= */
+
+                else if (
+                    status ===
+                    "ongoing"
+                ) {
+
+                    action = `
+
+                        <button
+                            type="button"
+
+                            class="complete-btn"
+
+                            data-action="complete"
+
+                            data-ride-id="${escapeAttribute(
+                                ride.id
+                            )}"
+                        >
+                            🏁 Complete Ride
+                        </button>
+
+                    `;
+
+                }
+
+
+                /* =========================
+                   COMPLETED
+                ========================= */
+
+                else if (
+                    status ===
+                    "completed"
+                ) {
+
+                    action = `
+
+                        <button
+                            type="button"
+
+                            class="done-btn"
+
+                            disabled
+                        >
+                            ✅ Ride Completed
+                        </button>
+
+                    `;
+
+                }
+
+
+                /* =========================
+                   CANCELLED
+                ========================= */
+
+                else if (
+                    status ===
+                    "cancelled"
+                ) {
+
+                    action = `
+
+                        <button
+                            type="button"
+
+                            class="cancelled-btn"
+
+                            disabled
+                        >
+                            ❌ Ride Cancelled
+                        </button>
+
+                    `;
+
+                }
+
+
+                else {
+
+                    action = `
+                        <span>
+                            Status:
+                            ${escapeHTML(
+                                ride.status ||
+                                "Unknown"
+                            )}
+                        </span>
+                    `;
+
+                }
+
+
+                return `
+
+                    <div class="ride-card">
+
+                        <div class="ride-header">
+
+                            <h3>
+                                🚕 Ride #${escapeHTML(
+                                    ride.id
+                                )}
+                            </h3>
+
+                            <span class="ride-status">
+                                ${escapeHTML(
+                                    ride.status ||
+                                    "Pending"
+                                )}
+                            </span>
+
+                        </div>
+
+
+                        <div class="ride-details">
+
+                            <p>
+                                📍
+                                <strong>
+                                    Pickup:
+                                </strong>
+
+                                ${escapeHTML(
+                                    ride.pickup ||
+                                    ride.pickupLocation ||
+                                    "-"
+                                )}
+                            </p>
+
+
+                            <p>
+                                🏁
+                                <strong>
+                                    Destination:
+                                </strong>
+
+                                ${escapeHTML(
+                                    ride.destination ||
+                                    ride.dropLocation ||
+                                    "-"
+                                )}
+                            </p>
+
+
+                            <p>
+                                💰
+                                <strong>
+                                    Fare:
+                                </strong>
+
+                                ₹${escapeHTML(
+                                    String(
+                                        ride.finalFare ||
+                                        ride.fare ||
+                                        0
+                                    )
+                                )}
+                            </p>
+
+
+                            <p>
+                                💳
+                                <strong>
+                                    Payment:
+                                </strong>
+
+                                ${escapeHTML(
+                                    ride.paymentStatus ||
+                                    ride.payment ||
+                                    "-"
+                                )}
+                            </p>
+
+
+                            <p>
+                                👤
+                                <strong>
+                                    Customer:
+                                </strong>
+
+                                ${escapeHTML(
+                                    ride.userId ||
+                                    "-"
+                                )}
+                            </p>
+
+                        </div>
+
+
+                        <div class="actions">
+
+                            ${action}
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            }
+        ).join("");
+
 }
 
 
-// ==========================================================
-// LOGOUT
-// ==========================================================
+/* =====================================
+   BUTTON HANDLER
+===================================== */
 
-if (logoutBtn) {
+ridesContainer.addEventListener(
+    "click",
+    async (event) => {
 
-    logoutBtn.addEventListener(
-        "click",
-        async function(event) {
-
-            event.preventDefault();
-
-
-            const confirmed =
-                confirm(
-                    "Are you sure you want to logout?"
-                );
+        const button =
+            event.target.closest(
+                "button[data-action]"
+            );
 
 
-            if (!confirmed) {
-                return;
-            }
-
-
-            try {
-
-                stopGPS();
-
-
-                if (
-                    ridesListener
-                ) {
-
-                    ridesListener();
-
-                    ridesListener =
-                        null;
-
-                }
-
-
-                if (
-                    currentDriver
-                ) {
-
-                    await setDoc(
-                        doc(
-                            db,
-                            "users",
-                            currentDriver.uid
-                        ),
-                        {
-
-                            online:
-                                false,
-
-                            updatedAt:
-                                serverTimestamp()
-
-                        },
-                        {
-                            merge:
-                                true
-                        }
-                    );
-
-                }
-
-
-                await auth.signOut();
-
-
-                window.location.href =
-                    "login.html";
-
-
-            } catch (error) {
-
-                console.error(
-                    "Logout error:",
-                    error
-                );
-
-
-                alert(
-                    "Logout failed.\n\n" +
-                    error.message
-                );
-
-            }
-
+        if (!button) {
+            return;
         }
-    );
-
-}
 
 
-// ==========================================================
-// VALIDATE COORDINATES
-// ==========================================================
-
-function validCoordinate(
-    latitude,
-    longitude
-) {
-
-    return (
-
-        Number.isFinite(
-            Number(latitude)
-        ) &&
-
-        Number.isFinite(
-            Number(longitude)
-        ) &&
-
-        Number(latitude) >= -90 &&
-
-        Number(latitude) <= 90 &&
-
-        Number(longitude) >= -180 &&
-
-        Number(longitude) <= 180
-
-    );
-
-}
+        const action =
+            button.dataset.action;
 
 
-// ==========================================================
-// ESCAPE HTML
-// ==========================================================
-
-function escapeHTML(value) {
-
-    const div =
-        document.createElement(
-            "div"
-        );
+        const rideId =
+            button.dataset.rideId;
 
 
-    div.textContent =
-        String(
-            value ?? ""
-        );
+        if (!rideId) {
 
+            alert(
+                "Ride ID missing."
+            );
 
-    return div.innerHTML;
-
-}
-
-
-// ==========================================================
-// CLEANUP
-// ==========================================================
-
-window.addEventListener(
-    "beforeunload",
-    function() {
-
-        stopGPS();
+            return;
+        }
 
 
         if (
-            ridesListener
+            action ===
+            "accept"
         ) {
 
-            ridesListener();
+            await acceptRide(
+                rideId,
+                button
+            );
 
-            ridesListener =
-                null;
+        }
+
+
+        else if (
+            action ===
+            "start"
+        ) {
+
+            await startRide(
+                rideId,
+                button
+            );
+
+        }
+
+
+        else if (
+            action ===
+            "complete"
+        ) {
+
+            await completeRide(
+                rideId,
+                button
+            );
 
         }
 
@@ -2077,10 +685,412 @@ window.addEventListener(
 );
 
 
-// ==========================================================
-// DEBUG
-// ==========================================================
+/* =====================================
+   ACCEPT
+===================================== */
 
-console.log(
-    "🚖 SitamarhiCab Driver Dashboard loaded successfully."
+async function acceptRide(
+    rideId,
+    button
+) {
+
+    try {
+
+        button.disabled = true;
+
+        button.textContent =
+            "Accepting...";
+
+
+        await updateDoc(
+            doc(
+                db,
+                "rides",
+                rideId
+            ),
+            {
+
+                status:
+                    "accepted",
+
+                acceptedAt:
+                    new Date(),
+
+                acceptedBy:
+                    currentUser.uid
+
+            }
+        );
+
+
+        showMessage(
+            "✅ Ride accepted.",
+            "success"
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "ACCEPT ERROR:",
+            error
+        );
+
+
+        button.disabled = false;
+
+        button.textContent =
+            "✅ Accept Ride";
+
+
+        alert(
+            "Accept failed:\n\n" +
+            error.message
+        );
+
+    }
+
+}
+
+
+/* =====================================
+   START
+===================================== */
+
+async function startRide(
+    rideId,
+    button
+) {
+
+    try {
+
+        button.disabled = true;
+
+        button.textContent =
+            "Starting...";
+
+
+        await updateDoc(
+            doc(
+                db,
+                "rides",
+                rideId
+            ),
+            {
+
+                status:
+                    "ongoing",
+
+                startedAt:
+                    new Date(),
+
+                startedBy:
+                    currentUser.uid
+
+            }
+        );
+
+
+        showMessage(
+            "▶️ Ride started.",
+            "success"
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "START ERROR:",
+            error
+        );
+
+
+        button.disabled = false;
+
+        button.textContent =
+            "▶️ Start Ride";
+
+
+        alert(
+            "Start failed:\n\n" +
+            error.message
+        );
+
+    }
+
+}
+
+
+/* =====================================
+   COMPLETE
+===================================== */
+
+async function completeRide(
+    rideId,
+    button
+) {
+
+    try {
+
+        const ride =
+            rides.find(
+                item =>
+                    item.id ===
+                    rideId
+            );
+
+
+        if (!ride) {
+
+            alert(
+                "Ride data not found."
+            );
+
+            return;
+        }
+
+
+        const currentFare =
+            Number(
+                ride.finalFare ||
+                ride.fare ||
+                0
+            );
+
+
+        const fare =
+            prompt(
+                "Final Fare enter karein:",
+                String(currentFare)
+            );
+
+
+        if (fare === null) {
+            return;
+        }
+
+
+        const finalFare =
+            Number(fare);
+
+
+        if (
+            !Number.isFinite(
+                finalFare
+            ) ||
+            finalFare < 0
+        ) {
+
+            alert(
+                "Valid fare enter karein."
+            );
+
+            return;
+        }
+
+
+        button.disabled = true;
+
+        button.textContent =
+            "Completing...";
+
+
+        await updateDoc(
+            doc(
+                db,
+                "rides",
+                rideId
+            ),
+            {
+
+                status:
+                    "completed",
+
+                finalFare:
+                    finalFare,
+
+                completedAt:
+                    new Date(),
+
+                completedBy:
+                    currentUser.uid
+
+            }
+        );
+
+
+        showMessage(
+            "🏁 Ride completed.",
+            "success"
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "COMPLETE ERROR:",
+            error
+        );
+
+
+        button.disabled = false;
+
+        button.textContent =
+            "🏁 Complete Ride";
+
+
+        alert(
+            "Complete failed:\n\n" +
+            error.message
+        );
+
+    }
+
+}
+
+
+/* =====================================
+   REFRESH
+===================================== */
+
+refreshBtn.addEventListener(
+    "click",
+    () => {
+
+        listenToAssignedRides();
+
+    }
 );
+
+
+/* =====================================
+   LOGOUT
+===================================== */
+
+logoutBtn.addEventListener(
+    "click",
+    async () => {
+
+        try {
+
+            if (
+                unsubscribeRides
+            ) {
+
+                unsubscribeRides();
+
+            }
+
+
+            await signOut(auth);
+
+
+            window.location.href =
+                "login.html";
+
+        }
+
+        catch (error) {
+
+            alert(
+                "Logout failed:\n\n" +
+                error.message
+            );
+
+        }
+
+    }
+);
+
+
+/* =====================================
+   MESSAGE
+===================================== */
+
+function showMessage(
+    text,
+    type
+) {
+
+    message.style.display =
+        "block";
+
+    message.textContent =
+        text;
+
+
+    if (
+        type ===
+        "success"
+    ) {
+
+        message.style.background =
+            "#dcfce7";
+
+        message.style.color =
+            "green";
+
+    }
+
+    else {
+
+        message.style.background =
+            "#fee2e2";
+
+        message.style.color =
+            "red";
+
+    }
+
+}
+
+
+/* =====================================
+   HELPERS
+===================================== */
+
+function escapeHTML(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    return String(value)
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+}
+
+
+function escapeAttribute(value) {
+
+    return escapeHTML(value);
+
+}
