@@ -1,22 +1,18 @@
-// ===================================
-// CONTACT PAGE JAVASCRIPT
-// ===================================
 
-// Page Loaded
-window.addEventListener("load", () => {
-    console.log("Contact Page Loaded Successfully");
-});
+import { db } from "./firebase.js";
 
-// ===================================
-// Contact Form Validation
-// ===================================
+import {
+    collection,
+    addDoc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
+// Contact Form
 const contactForm = document.getElementById("contactForm");
+const submitBtn = contactForm?.querySelector('button[type="submit"]');
 
 if (contactForm) {
-
-    contactForm.addEventListener("submit", function(e){
-
+    contactForm.addEventListener("submit", async function (e) {
         e.preventDefault();
 
         const name = document.getElementById("name").value.trim();
@@ -24,84 +20,55 @@ if (contactForm) {
         const phone = document.getElementById("phone").value.trim();
         const message = document.getElementById("message").value.trim();
 
-        // Name Validation
-        if(name.length < 3){
+        if (name.length < 3) {
             alert("Please enter a valid name.");
             return;
         }
 
-        // Email Validation
-        const emailPattern =
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        if(!emailPattern.test(email)){
+        if (!emailPattern.test(email)) {
             alert("Please enter a valid email address.");
             return;
         }
 
-        // Phone Validation
-        const phonePattern = /^[0-9]{10}$/;
-
-        if(!phonePattern.test(phone)){
+        if (!/^[0-9]{10}$/.test(phone)) {
             alert("Phone number must contain exactly 10 digits.");
             return;
         }
 
-        // Message Validation
-        if(message.length < 10){
+        if (message.length < 10) {
             alert("Message should be at least 10 characters.");
             return;
         }
 
-        // Success
-        alert("✅ Thank you! Your message has been sent successfully.");
+        try {
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Sending...";
+            }
 
-        contactForm.reset();
+            await addDoc(collection(db, "contactMessages"), {
+                name,
+                email,
+                phone,
+                message,
+                createdAt: serverTimestamp(),
+                status: "new"
+            });
 
+            alert("Thank you! Your message has been submitted successfully.");
+            contactForm.reset();
+
+        } catch (error) {
+            console.error("Contact form error:", error);
+            alert("Message could not be sent. Please try again later.");
+
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Send Message";
+            }
+        }
     });
-
 }
-
-// ===================================
-// Button Hover Animation
-// ===================================
-
-const submitBtn = document.querySelector(".contact-form button");
-
-if(submitBtn){
-
-    submitBtn.addEventListener("mouseenter",()=>{
-
-        submitBtn.style.transform="scale(1.03)";
-
-    });
-
-    submitBtn.addEventListener("mouseleave",()=>{
-
-        submitBtn.style.transform="scale(1)";
-
-    });
-
-}
-
-// ===================================
-// Social Icons Animation
-// ===================================
-
-const icons = document.querySelectorAll(".social-icons a");
-
-icons.forEach(icon=>{
-
-    icon.addEventListener("mouseenter",()=>{
-
-        icon.style.transform="translateY(-5px)";
-
-    });
-
-    icon.addEventListener("mouseleave",()=>{
-
-        icon.style.transform="translateY(0)";
-
-    });
-
-});

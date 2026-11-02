@@ -1,116 +1,45 @@
-// ====================================
-// FAQ PAGE JAVASCRIPT
-// ====================================
 
-// Page Loaded
-window.addEventListener("load", () => {
-
-    console.log("FAQ Page Loaded Successfully");
-
-});
-
-// ====================================
 // FAQ Accordion
-// ====================================
-
 const faqItems = document.querySelectorAll(".faq-item");
 
-faqItems.forEach(item => {
-
+faqItems.forEach((item) => {
     const question = item.querySelector(".faq-question");
 
     question.addEventListener("click", () => {
+        const isActive = item.classList.contains("active");
 
-        // Close all other items
-        faqItems.forEach(other => {
-
-            if(other !== item){
-
-                other.classList.remove("active");
-
-            }
-
+        // Close all FAQ items
+        faqItems.forEach((other) => {
+            other.classList.remove("active");
+            const btn = other.querySelector(".faq-question");
+            if (btn) btn.setAttribute("aria-expanded", "false");
         });
 
-        // Toggle current item
-        item.classList.toggle("active");
-
+        // Toggle selected item
+        if (!isActive) {
+            item.classList.add("active");
+            question.setAttribute("aria-expanded", "true");
+        }
     });
-
 });
 
-// ====================================
-// Smooth Fade-in Animation
-// ====================================
-
-faqItems.forEach((item, index) => {
-
-    item.style.opacity = "0";
-    item.style.transform = "translateY(20px)";
-
-    setTimeout(() => {
-
-        item.style.transition = "0.5s ease";
-
-        item.style.opacity = "1";
-
-        item.style.transform = "translateY(0)";
-
-    }, index * 150);
-
-});
-
-// ====================================
-// Back To Top Button (Optional)
-// ====================================
-
+// Back to Top Button
 const backBtn = document.createElement("button");
 
-backBtn.innerHTML = "⬆";
-
 backBtn.id = "backToTop";
+backBtn.textContent = "↑";
+backBtn.setAttribute("aria-label", "Back to top");
 
 document.body.appendChild(backBtn);
 
-backBtn.style.cssText = `
-position:fixed;
-bottom:20px;
-right:20px;
-width:50px;
-height:50px;
-border:none;
-border-radius:50%;
-background:#FFD700;
-color:#000;
-font-size:20px;
-cursor:pointer;
-display:none;
-box-shadow:0 5px 15px rgba(0,0,0,.2);
-z-index:999;
-`;
-
 window.addEventListener("scroll", () => {
-
-    if(window.scrollY > 300){
-
-        backBtn.style.display = "block";
-
-    }else{
-
-        backBtn.style.display = "none";
-
-    }
-
+    backBtn.style.display =
+        window.scrollY > 300 ? "block" : "none";
 });
 
 backBtn.addEventListener("click", () => {
-
     window.scrollTo({
-
-        top:0,
-
-        behavior:"smooth"
-
+        top: 0,
+        behavior: "smooth"
     });
-
 });

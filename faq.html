@@ -1,127 +1,185 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ | SitamarhiCab</title>
+    <meta name="description" content="Find answers to frequently asked questions about SitamarhiCab cab booking, payments, cancellations and customer support.">
 
-<title>FAQ | SitamarhiCab</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="faq.css">
 
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="faq.css">
-
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 </head>
 
 <body>
 
-<header class="faq-header">
+    <!-- Header -->
+    <header class="faq-header">
+        <nav class="faq-nav">
+            <a href="index.html" class="logo">
+                <i class="fa-solid fa-taxi"></i> SitamarhiCab
+            </a>
 
-<h1>Frequently Asked Questions</h1>
+            <a href="index.html" class="home-link">
+                <i class="fa-solid fa-house"></i> Home
+            </a>
+        </nav>
 
-<p>Find answers to common questions.</p>
+        <div class="header-content">
+            <span class="header-tag">HELP CENTER</span>
+            <h1>Frequently Asked Questions</h1>
+            <p>Have questions? Find answers about booking, payments and rides.</p>
+        </div>
+    </header>
 
-</header>
+    <!-- FAQ Section -->
+    <main class="faq-container">
 
-<section class="faq-container">
+        <div class="faq-intro">
+            <h2>How can we help you?</h2>
+            <p>Browse our frequently asked questions below.</p>
+        </div>
 
-<div class="faq-item">
+        <!-- Booking -->
+        <div class="faq-category">
+            <h3><i class="fa-solid fa-car"></i> Booking & Rides</h3>
 
-<button class="faq-question">
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false">
+                    How do I book a ride?
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Visit our website, enter your pickup and destination details, select an available cab option and follow the booking process.</p>
+                </div>
+            </div>
 
-How do I book a ride?
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false">
+                    Can I cancel my ride?
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>You can request cancellation through the available booking options. Please check the applicable cancellation terms before cancelling.</p>
+                </div>
+            </div>
 
-<i class="fa-solid fa-chevron-down"></i>
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false">
+                    Can I book a cab for another person?
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>You can provide the correct passenger contact details and trip information while making a booking, where this option is available.</p>
+                </div>
+            </div>
+        </div>
 
-</button>
+        <!-- Payment -->
+        <div class="faq-category">
+            <h3><i class="fa-solid fa-credit-card"></i> Payment & Fare</h3>
 
-<div class="faq-answer">
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false">
+                    Which payment methods are accepted?
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Online payments are processed through Razorpay where available. Cash payment availability depends on the booking option shown to you.</p>
+                </div>
+            </div>
 
-<p>
-Open the app or website, enter pickup & destination,
-select your cab and confirm booking.
-</p>
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false">
+                    How is my cab fare calculated?
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Your fare depends on the selected cab, route and applicable booking charges. Review the displayed fare before confirming your booking.</p>
+                </div>
+            </div>
 
-</div>
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false">
+                    What should I do if payment fails?
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Check your payment status before trying again. If money is deducted but the booking is not confirmed, contact our support team with your transaction details.</p>
+                </div>
+            </div>
+        </div>
 
-</div>
+        <!-- Safety and Support -->
+        <div class="faq-category">
+            <h3><i class="fa-solid fa-headset"></i> Safety & Support</h3>
 
-<div class="faq-item">
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false">
+                    How can I contact customer support?
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>You can contact our support team through the Contact Us page, email or phone number listed on our website.</p>
+                </div>
+            </div>
 
-<button class="faq-question">
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false">
+                    Is my personal information secure?
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>We use the information needed to provide our services. Please read our Privacy Policy to understand how your information is handled.</p>
+                </div>
+            </div>
 
-Which payment methods are accepted?
+            <div class="faq-item">
+                <button class="faq-question" aria-expanded="false">
+                    How can I report a problem with my ride?
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <div class="faq-answer">
+                    <p>Contact our support team through the Contact Us page and share your booking details and a description of the issue.</p>
+                </div>
+            </div>
+        </div>
 
-<i class="fa-solid fa-chevron-down"></i>
+        <!-- Contact CTA -->
+        <section class="faq-contact">
+            <div class="contact-icon">
+                <i class="fa-solid fa-comments"></i>
+            </div>
 
-</button>
+            <h2>Still have questions?</h2>
+            <p>Our team is here to help you with your queries.</p>
 
-<div class="faq-answer">
+            <a href="contact.html" class="contact-btn">
+                Contact Us <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </section>
 
-<p>
-Cash, UPI, Debit Card, Credit Card and Wallet.
-</p>
+    </main>
 
-</div>
+    <!-- Footer -->
+    <footer class="faq-footer">
+        <p>&copy; <span id="currentYear"></span> SitamarhiCab. All rights reserved.</p>
 
-</div>
+        <div>
+            <a href="index.html">Home</a>
+            <a href="about.html">About Us</a>
+            <a href="privacy-policy.html">Privacy Policy</a>
+            <a href="terms.html">Terms & Conditions</a>
+            <a href="contact.html">Contact</a>
+        </div>
+    </footer>
 
-<div class="faq-item">
+    <script src="faq.js"></script>
 
-<button class="faq-question">
-
-Can I cancel my ride?
-
-<i class="fa-solid fa-chevron-down"></i>
-
-</button>
-
-<div class="faq-answer">
-
-<p>
-Yes. You can cancel your ride before the driver arrives.
-Cancellation charges may apply.
-</p>
-
-</div>
-
-</div>
-
-<div class="faq-item">
-
-<button class="faq-question">
-
-How can I track my driver?
-
-<i class="fa-solid fa-chevron-down"></i>
-
-</button>
-
-<div class="faq-answer">
-
-<p>
-After booking, go to the Tracking page to see your
-driver's live location.
-</p>
-
-</div>
-
-</div>
-
-<div class="faq-item">
-
-<button class="faq-question">
-
-Are your drivers verified?
-
-<i class="fa-solid fa-chevron-down"></i>
-
-</button>
-
-<div class="faq-answer">
-
-<p>
-Yes. Every
+</body>
+</html>

@@ -1,45 +1,33 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="SitamarhiCab - Book affordable and reliable Bike, Auto and Car rides in Sitamarhi.">
+
+    <title>SitamarhiCab - Bike, Auto & Car Booking in Sitamarhi</title>
+
+    <meta name="description" content="Explore bike, auto and car booking options with SitamarhiCab in Sitamarhi, Bihar. Check ride details and submit your booking request online.">
+
     <meta name="robots" content="index, follow">
     <meta name="google-adsense-account" content="ca-pub-9367433471037665">
+
     <link rel="canonical" href="https://sitamarhicab-1.onrender.com/">
 
-    <title>SitamarhiCab - Cab Booking Service in Sitamarhi</title>
-    <script async custom-element="amp-auto-ads"
-        src="https://cdn.ampproject.org/v0/amp-auto-ads-0.1.js">
-</script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-    <!-- Google/SEO structured data -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "SitamarhiCab",
-      "alternateName": "Sitamarhi Cab",
       "url": "https://sitamarhicab-1.onrender.com/"
     }
     </script>
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "SitamarhiCab",
-      "alternateName": "Sitamarhi Cab",
-      "url": "https://sitamarhicab-1.onrender.com/"
-    }
-    </script>
-
-    <link rel="stylesheet" href="style.css">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* Responsive safety for phone, tablet and PC */
         html, body {
             max-width: 100%;
             overflow-x: hidden;
@@ -48,6 +36,20 @@
         img {
             max-width: 100%;
             height: auto;
+        }
+
+        .local-info {
+            padding: 40px 8%;
+            line-height: 1.8;
+        }
+
+        .local-info h2,
+        .local-info h3 {
+            margin-top: 20px;
+        }
+
+        .local-info li {
+            margin-bottom: 8px;
         }
 
         @media (max-width: 768px) {
@@ -83,15 +85,13 @@
 
             .cards,
             .features,
-            .vehicle-container,
-            .testimonial-container {
+            .vehicle-container {
                 flex-wrap: wrap;
             }
 
             .card,
             .feature-box,
-            .vehicle-card,
-            .testimonial-card {
+            .vehicle-card {
                 max-width: 100%;
                 box-sizing: border-box;
             }
@@ -108,10 +108,6 @@
                 text-align: center;
             }
 
-            .login-btn {
-                display: inline-block;
-            }
-
             h1 {
                 font-size: clamp(28px, 8vw, 40px);
             }
@@ -126,203 +122,183 @@
             }
 
             .vehicle-card,
-            .testimonial-card,
             .feature-box,
             .card {
                 width: 100%;
             }
         }
     </style>
-
 </head>
+
 <body>
 
-    <!-- Header -->
-    <header>
-        <nav class="navbar">
-            <div class="logo">🚖 SitamarhiCab</div>
+<header>
+    <nav class="navbar">
+        <div class="logo">🚖 SitamarhiCab</div>
 
-            <ul class="menu">
-                <li><a href="#">Home</a></li>
-                <li><a href="services.html"> Our Services</a></li>
-                <li><a href="book.html">Book Ride</a></li>
-                <li><a href="#">Driver</a></li>
-                <li><a href="about.html">About</a></li>
-                <li><a href="contact.html">Contact</a></li>
-                <li><a href="faq.html">FAQ</a></li>
-            
-            </ul>
+        <ul class="menu">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="services.html">Our Services</a></li>
+            <li><a href="book.html">Book Ride</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+        </ul>
 
-            <a href="login.html" class="login-btn">Login</a>
-            <a href="signup.html" class="login-btn">Sign Up</a>
-            
-        </nav>
-    </header>
+        <a href="login.html" class="login-btn">Login</a>
+        <a href="signup.html" class="login-btn">Sign Up</a>
+    </nav>
+</header>
 
-    <!-- Hero Section -->
-    <section class="hero">
+<main>
 
-        <div class="hero-left">
-            <h1>Book Your Ride in Sitamarhi</h1>
+<section class="hero">
+    <div class="hero-left">
+        <h1>Book Your Ride in Sitamarhi</h1>
+        <p>
+            Explore bike, auto and car ride options
+            through the SitamarhiCab online booking platform.
+        </p>
+        <a href="book.html" class="book-btn">Book Now</a>
+    </div>
 
-            <p>
-                Fast, Safe & Affordable Taxi Service.
-                Bike, Auto aur Car booking ek hi jagah.
-            </p>
+    <div class="hero-right">
+        <img src="images/home.sitamarhiCab.png"
+             alt="SitamarhiCab ride booking service">
+    </div>
+</section>
 
-            <a href="book.html" class="book-btn">Book Now</a>
+<section class="services">
+    <h2>Our Services</h2>
+
+    <div class="cards">
+        <div class="card">
+            <h3>🏍 Bike</h3>
+            <p>Explore bike ride booking options.</p>
         </div>
 
-        <div class="hero-right">
-
-            <img src="images/home.sitamarhiCab.png">
-
+        <div class="card">
+            <h3>🛺 Auto</h3>
+            <p>Explore auto ride booking options.</p>
         </div>
 
-    </section>
-
-    <!-- Services -->
-
-    <section class="services">
-
-        <h2>Our Services</h2>
-
-        <div class="cards">
-
-            <div class="card">
-                <h3>🏍 Bike</h3>
-                <p>Quick Ride</p>
-            </div>
-
-            <div class="card">
-                <h3>🛺 Auto</h3>
-                <p>Affordable</p>
-            </div>
-
-            <div class="card">
-                <h3>🚗 Car</h3>
-                <p>Comfort Ride</p>
-            </div>
-
+        <div class="card">
+            <h3>🚗 Car</h3>
+            <p>Explore car ride booking options.</p>
         </div>
-
-    </section>
-    <!-- Why Choose Us -->
+    </div>
+</section>
 
 <section class="why-us">
-
     <h2>Why Choose SitamarhiCab?</h2>
 
     <div class="features">
-
         <div class="feature-box">
-            <h3>⚡ Fast Pickup</h3>
-            <p>Nearby drivers reach you quickly.</p>
+            <h3>Easy Booking</h3>
+            <p>Submit your ride request online.</p>
         </div>
 
         <div class="feature-box">
-            <h3>🛡 Safe Ride</h3>
-            <p>Verified drivers and secure travel.</p>
+            <h3>Ride Options</h3>
+            <p>Choose from available vehicle categories.</p>
         </div>
 
         <div class="feature-box">
-            <h3>💰 Affordable Fare</h3>
-            <p>Best prices for Bike, Auto and Car.</p>
+            <h3>Fare Information</h3>
+            <p>Check applicable fare details before booking.</p>
         </div>
 
         <div class="feature-box">
-            <h3>📞 24×7 Support</h3>
-            <p>Customer support whenever you need.</p>
+            <h3>Customer Support</h3>
+            <p>Contact our team for booking-related queries.</p>
         </div>
-
     </div>
-
 </section>
-    <!-- Vehicle Section -->
 
 <section class="vehicles">
-
     <h2>Choose Your Ride</h2>
 
     <div class="vehicle-container">
-
         <div class="vehicle-card">
-            <img src="images/herobike.scab.png" alt="Bike">
+            <img src="images/herobike.scab.png" alt="Bike ride">
             <h3>Bike</h3>
             <p>Starting ₹30</p>
-            <button class="ride-btn">Book Bike</button>
+            <a href="book.html?vehicle=bike" class="ride-btn">Book Bike</a>
         </div>
 
         <div class="vehicle-card">
-            <img src="images/Auto.scab.png" alt="Auto">
+            <img src="images/Auto.scab.png" alt="Auto ride">
             <h3>Auto</h3>
             <p>Starting ₹50</p>
-            <button class="ride-btn">Book Auto</button>
+            <a href="book.html?vehicle=auto" class="ride-btn">Book Auto</a>
         </div>
 
         <div class="vehicle-card">
-            <img src="images/taxi.scab.png" alt="Car">
+            <img src="images/taxi.scab.png" alt="Car ride">
             <h3>Car</h3>
             <p>Starting ₹120</p>
-            <button class="ride-btn">Book Car</button>
+            <a href="book.html?vehicle=car" class="ride-btn">Book Car</a>
         </div>
-
     </div>
-
-</section>
-    <!-- Testimonials -->
-
-<section class="testimonials">
-
-    <h2>What Our Customers Say</h2>
-
-    <div class="testimonial-container">
-
-        <div class="testimonial-card">
-            <h3>⭐⭐⭐⭐⭐</h3>
-            <p>"Best cab service in Sitamarhi. Driver was on time and very polite."</p>
-            <h4>- Rahul Kumar</h4>
-        </div>
-
-        <div class="testimonial-card">
-            <h3>⭐⭐⭐⭐⭐</h3>
-            <p>"Affordable fares and clean vehicles. Highly recommended."</p>
-            <h4>- Priya Singh</h4>
-        </div>
-
-        <div class="testimonial-card">
-            <h3>⭐⭐⭐⭐⭐</h3>
-            <p>"Very fast pickup. Booking process is simple."</p>
-            <h4>- Aman Raj</h4>
-        </div>
-
-    </div>
-
 </section>
 
-<!-- Download App -->
+<section class="local-info">
+    <h2>Online Ride Booking in Sitamarhi, Bihar</h2>
+
+    <p>
+        SitamarhiCab is an online ride booking platform
+        designed to help customers explore bike, auto
+        and car booking options in Sitamarhi, Bihar.
+        Customers can visit the booking page, enter
+        their journey details and submit a ride request.
+    </p>
+
+    <h3>Available Vehicle Categories</h3>
+    <p>
+        Customers can explore different vehicle categories
+        and select an option according to their travel needs.
+        Actual availability depends on the service and drivers.
+    </p>
+
+    <h3>How to Book a Ride?</h3>
+    <ol>
+        <li>Open the Book Ride page.</li>
+        <li>Select your preferred vehicle.</li>
+        <li>Enter pickup and destination details.</li>
+        <li>Review the fare and booking information.</li>
+        <li>Submit your booking request.</li>
+    </ol>
+
+    <h3>Fare Information</h3>
+    <p>
+        Please review the applicable fare and additional
+        charges, if any, before confirming a ride.
+        Final fare details should be verified on the
+        booking page.
+    </p>
+</section>
 
 <section class="download-app">
-
-    <h2>Coming Soon</h2>
-
-    <p>Download the SitamarhiCab App for Android & iPhone.</p>
-
-    <button>Coming Soon</button>
-
+    <h2>Mobile App</h2>
+    <p>Our mobile app is planned for a future release.</p>
 </section>
-<amp-auto-ads type="adsense"
-        data-ad-client="ca-pub-9367433471037665">
-</amp-auto-ads>
-    
 
-    <footer>
+</main>
 
-        <p>© 2026 SitamarhiCab | All Rights Reserved</p>
+<footer>
+    <p>© 2026 SitamarhiCab | All Rights Reserved</p>
+    <p>
+        <a href="about.html">About Us</a> |
+        <a href="contact.html">Contact</a> |
+        <a href="faq.html">FAQ</a>
+    </p>
+    <p>
+        <a href="privacy-policy.html">Privacy Policy</a> |
+        <a href="terms.html">Terms & Conditions</a>
+    </p>
+</footer>
 
-    </footer>
-
-    <script src="script.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
